@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Calculations
-    const subtotal = items.reduce((sum: number, item: any) => sum + (item.price || 0) * item.quantity, 0);
+    const subtotal = items.reduce((sum: number, item: { price?: number; quantity: number }) => sum + (item.price || 0) * item.quantity, 0);
     const shipping = subtotal > 1000 ? 0 : 150;
     const total = subtotal + shipping;
 
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     if (orderError) throw orderError;
 
     // 4. Create Order Items
-    const orderItems = items.map((item: any) => ({
+    const orderItems = items.map((item: { productId: string; name: string; quantity: number; price?: number }) => ({
       order_id: order.id,
       product_id: item.productId,
       product_name: item.name,

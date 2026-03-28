@@ -50,7 +50,7 @@ export function ReturnRequestModal({ orderId, isCOD }: ReturnRequestModalProps) 
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none bg-white text-sm"
           >
             <option value="">Select a reason...</option>
-            <option value="Size issue">Size issue (Item doesn't fit)</option>
+            <option value="Size issue">Size issue (Item doesn&apos;t fit)</option>
             <option value="Defective product">Defective / Damaged product</option>
             <option value="Wrong item delivered">Wrong item delivered</option>
             <option value="Quality not as expected">Quality not as expected</option>

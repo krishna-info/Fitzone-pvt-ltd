@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ChevronRight, Package, Tag, Truck } from 'lucide-react';
+import { ShoppingBag, Eye, Truck } from 'lucide-react';
 import { Product } from '@/lib/product-types';
 import { Button } from '@/components/ui/Button';
 

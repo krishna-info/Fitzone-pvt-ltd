@@ -26,13 +26,13 @@ export function ProductFormModal({ product }: ProductFormProps) {
         await updateProduct(formData);
       } else {
         // Simple create logic for now, missing images/slug generation in this demo
-        const data = Object.fromEntries(formData.entries());
+        const data = Object.fromEntries(formData.entries()) as unknown as Omit<Product, 'id' | 'created_at'>;
         await createProduct({
           ...data,
           images: [], // Needs proper upload logic
-          is_active: data.is_active === 'true',
-          price_inr: parseInt(data.price_inr as string),
-          moq: parseInt(data.moq as string) || 1,
+          is_active: String(data.is_active) === 'true',
+          price_inr: parseInt(String(data.price_inr)),
+          moq: parseInt(String(data.moq)) || 1,
         });
       }
       setOpen(false);
@@ -45,6 +45,8 @@ export function ProductFormModal({ product }: ProductFormProps) {
 
   return (
     <Modal
+      open={open}
+      onOpenChange={setOpen}
       title={isEdit ? 'Edit Product' : 'Add New Product'}
       description={isEdit ? `Modifying ${product.name}` : 'Fill in the details to add a new product to the catalogue.'}
       trigger={

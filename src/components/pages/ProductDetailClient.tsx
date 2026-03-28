@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ShoppingBag, MessageCircle, ChevronLeft, ChevronRight, Package, CheckCircle, Truck } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, ShieldCheck, MessageCircle, ChevronRight, CheckCircle, Truck } from 'lucide-react';
 import { Product } from '@/lib/product-types';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/store/cartStore';
@@ -38,7 +38,6 @@ export function ProductDetailClient({
       productId: product.id,
       name: product.name,
       price: product.price_inr || 0,
-      quantity: 1,
       imageUrl: product.images[0],
       isEnquiryOnly: product.is_enquiry_only,
       size: selectedSize,
