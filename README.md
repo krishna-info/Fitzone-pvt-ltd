@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FitZone Apparels - Premium B2C E-commerce Platform
 
-## Getting Started
+FitZone Apparels is a modern, high-performance B2C e-commerce store built for a premium shopping experience. It features a sleek glassmorphism UI, real-time store management, and secure payment integration.
 
-First, run the development server:
+## 🚀 Key Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 🛒 Shopping Experience
+- **Interactive Product Catalog**: Editorial-style grid with advanced filtering and animations.
+- **Dynamic Cart**: Support for multiple sizes per product with real-time subtotal calculations.
+- **Secure Checkout**: Integrated with **Razorpay** for seamless UPI, Card, and Net Banking payments.
+- **Order Tracking**: Publicly accessible order status page with live delivery progress.
+- **Returns System**: built-in 48-hour return request flow with automated UPI collection for COD refunds.
+
+### 🛡️ Admin Dashboard
+- **Real-time Stats**: Dashboard with live revenue, order counts, and enquiry tracking.
+- **Order Management**: Full control over order statuses and return request approvals.
+- **Product CRUD**: Interactive interface to add, edit, or delete products and manage inventory.
+- **User Management**: Administrative control over user accounts and permission roles.
+- **Enquiry Manager**: Centralized hub for customer contact and bulk order requests.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 14+](https://nextjs.org/) (App Router)
+- **Styling**: [Vanilla CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) + [Framer Motion](https://www.framer.com/motion/)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Payments**: [Razorpay](https://razorpay.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Deployment**: Optimized for Vercel
+
+## ⚙️ Environment Variables
+
+Create a `.env.local` file with the following keys:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Razorpay
+NEXT_PUBLIC_RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+
+# Other Integrations
+RESEND_API_KEY=your_resend_key
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_name
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📜 Database Schema
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The project utilizes the following tables in the `public` schema:
+- `products`: Catalog items with pricing, features, and images.
+- `orders`: Customer orders with status and return tracking.
+- `order_items`: Line items linked to orders.
+- `profiles`: User metadata and administrative roles.
+- `contact_enquiries`: Store contact form submissions.
+- `payments`: Detailed Razorpay transaction logs.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🏁 Getting Started
 
-## Learn More
+1. **Clone the repository**
+2. **Install dependencies**: `npm install`
+3. **Run development server**: `npm run dev`
+4. **Build for production**: `npm run build`
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Developed with ❤️ for **FitZone Apparels**.
