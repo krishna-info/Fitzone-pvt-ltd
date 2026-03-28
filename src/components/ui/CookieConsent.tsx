@@ -27,8 +27,8 @@ export function CookieConsent() {
     localStorage.setItem(CONSENT_KEY, 'accepted');
     setVisible(false);
     // Fire GA4 consent if available
-    if (typeof window !== 'undefined' && (window as unknown as { gtag?: Function }).gtag) {
-      (window as unknown as { gtag: Function }).gtag('consent', 'update', {
+    if (typeof window !== 'undefined' && (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag) {
+      (window as unknown as { gtag: (...args: unknown[]) => void }).gtag('consent', 'update', {
         analytics_storage: 'granted',
       });
     }

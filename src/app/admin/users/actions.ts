@@ -25,7 +25,7 @@ export async function createUser(formData: FormData) {
   const supabase = createSupabaseAdminClient();
 
   // Create user in Auth
-  const { data, error: authError } = await supabase.auth.admin.createUser({
+  const { error: authError } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,

@@ -5,9 +5,10 @@ import { UserPlus, Edit2, Mail, Lock, User, Shield, AlertCircle } from 'lucide-r
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { createUser, updateUser } from '@/app/admin/users/actions';
+import { Profile } from '@/types/admin';
 
 interface UserFormModalProps {
-  existingUser?: any;
+  existingUser?: Profile;
 }
 
 export function UserFormModal({ existingUser }: UserFormModalProps) {
@@ -74,7 +75,7 @@ export function UserFormModal({ existingUser }: UserFormModalProps) {
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
               <input 
                 name="full_name"
-                defaultValue={existingUser?.full_name}
+                defaultValue={existingUser?.full_name || ''}
                 required
                 placeholder="John Doe"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-100 focus:ring-2 focus:ring-brand-primary outline-none bg-gray-50/50 text-sm"

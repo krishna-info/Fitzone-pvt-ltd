@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Plus, Minus, MessageCircle, Trash2 } from 'lucide-react';
+import Image from 'next/image';
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/Button';
 import { WHATSAPP_NUMBER } from '@/lib/constants';
@@ -108,7 +109,7 @@ export function ShoppingCart() {
                        <div className="flex gap-3">
                          {item.imageUrl && (
                            <div className="w-12 h-12 rounded bg-gray-100 overflow-hidden relative flex-shrink-0">
-                             <img src={item.imageUrl} alt={item.name} className="object-cover w-full h-full" />
+                             <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
                            </div>
                          )}
                          <div>

@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import { Lock, Mail, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -11,7 +9,6 @@ import Image from 'next/image';
 import { login } from '../actions';
 
 export default function AdminLoginPage() {
-  const router = useRouter(); // Keeping for other navigation if needed, but and form action will handle redirect
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

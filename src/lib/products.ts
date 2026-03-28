@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase';
-import { Product, PRODUCT_CATEGORIES } from './product-types';
+import { Product } from './product-types';
 
 export * from './product-types';
 

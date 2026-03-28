@@ -39,7 +39,9 @@ export async function deleteProduct(id: string) {
   return { success: true };
 }
 
-export async function createProduct(productData: any) {
+import { Product } from '@/lib/product-types';
+
+export async function createProduct(productData: Omit<Product, 'id' | 'created_at'>) {
   const supabase = createSupabaseServerClient();
   
   const { error } = await supabase

@@ -41,7 +41,10 @@ export async function updateOrderStatus(orderId: string, status: string) {
 export async function updateReturnStatus(orderId: string, returnStatus: string) {
   const supabase = createSupabaseServerClient();
   
-  const updateData: any = { return_status: returnStatus };
+  const updateData: { return_status: string; refund_processed_at?: string } = { 
+    return_status: returnStatus 
+  };
+  
   if (returnStatus === 'refunded') {
     updateData.refund_processed_at = new Date().toISOString();
   }

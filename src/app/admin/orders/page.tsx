@@ -1,12 +1,14 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronLeft, ShoppingBag, Clock, User, CreditCard, Package, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ShoppingBag, Clock, User, AlertCircle } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { OrderActionButtons } from '@/components/admin/OrderActionButtons';
 
 export const metadata: Metadata = {
   title: 'Orders | FitZone Admin',
 };
+
+import { Order } from '@/types/admin';
 
 export default async function AdminOrdersPage() {
   const supabase = createSupabaseServerClient();
@@ -42,7 +44,7 @@ export default async function AdminOrdersPage() {
           {/* List */}
           <div className="divide-y divide-gray-50">
             {orders && orders.length > 0 ? (
-              orders.map((order) => (
+              (orders as unknown as Order[]).map((order) => (
                 <div key={order.id} className="p-8 hover:bg-brand-surface transition-colors group">
                   <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-8">
                     <div className="space-y-6 flex-1">
@@ -85,9 +87,9 @@ export default async function AdminOrdersPage() {
                         <div className="space-y-2">
                            <p className="text-[10px] font-black text-brand-muted uppercase tracking-widest">Payment & Total</p>
                            <div className="flex items-baseline gap-2">
-                             <p className="text-2xl font-black text-brand-dark">₹{order.total_amount.toLocaleString()}</p>
+                             <p className="text-2xl font-black text-brand-dark">₹{order.total.toLocaleString()}</p>
                              <span className="text-xs font-bold text-brand-muted uppercase tracking-widest">
-                               via {order.payment_method?.toUpperCase()}
+                                via {(order.payment_id ? 'Razorpay' : 'COD').toUpperCase()}
                              </span>
                            </div>
                         </div>

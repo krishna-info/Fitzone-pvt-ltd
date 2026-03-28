@@ -5,6 +5,8 @@ import { getUsers } from './actions';
 import { UserFormModal } from '@/components/admin/UserFormModal';
 import { DeleteUserButton } from '@/components/admin/DeleteUserButton';
 
+import { Profile } from '@/types/admin';
+
 export const metadata: Metadata = {
   title: 'User Management | FitZone Admin',
 };
@@ -59,7 +61,7 @@ export default async function AdminUsersPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {users && users.length > 0 ? (
-                  users.map((user) => (
+                  (users as unknown as Profile[]).map((user) => (
                     <tr key={user.id} className="hover:bg-brand-surface transition-colors group">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
