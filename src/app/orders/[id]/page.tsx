@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronLeft, ShoppingBag, Clock, Package, CheckCircle2, AlertCircle, MessageSquare, CreditCard } from 'lucide-react';
 import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import { ReturnRequestModal } from '@/components/orders/ReturnRequestModal';
 
 export const metadata: Metadata = {
@@ -74,11 +75,16 @@ export default async function OrderLookupPage({ params }: { params: { id: string
             <div className="space-y-4 pt-4">
                <h3 className="text-sm font-black text-brand-dark uppercase tracking-widest border-b border-gray-50 pb-4">Order Items</h3>
                <div className="divide-y divide-gray-50">
-                  {order.order_items.map((item: any) => (
+                  {order.order_items.map((item: { id: string; products: { name: string; images: string[] }; size?: string; quantity: number; price_at_time: number }) => (
                     <div key={item.id} className="py-4 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100 text-center">
-                           <img src={item.products?.images?.[0]} className="object-cover w-full h-full" alt="" />
+                           <Image 
+                              src={typeof item.products?.images?.[0] === 'string' ? item.products.images[0] : '/placeholder.png'} 
+                              fill 
+                              className="object-cover" 
+                              alt="" 
+                            />
                          </div>
                          <div className="text-left">
                            <p className="font-bold text-brand-dark leading-tight">{item.products?.name}</p>

@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ChevronLeft, Users, UserPlus, Search, Filter, Shield, Mail, Calendar, MoreVertical, Edit2, Trash2, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, Users, Search, Filter, Shield, Mail, Calendar } from 'lucide-react';
 import { getUsers } from './actions';
 import { UserFormModal } from '@/components/admin/UserFormModal';
 import { DeleteUserButton } from '@/components/admin/DeleteUserButton';

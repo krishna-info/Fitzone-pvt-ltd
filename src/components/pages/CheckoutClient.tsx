@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ChevronRight, ShieldCheck, Truck, CreditCard, ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, ShoppingBag, ShieldCheck, Truck, CreditCard, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/Button';
 import Script from 'next/script';
@@ -66,7 +66,7 @@ export function CheckoutClient() {
         description: `Order for ${totalItems} items`,
         image: "/logo.png",
         order_id: order.id,
-        handler: async function (response: any) {
+        handler: async function (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) {
           // 3. Verify payment on server
           const verifyRes = await fetch('/api/razorpay/verify', {
             method: 'POST',
@@ -97,7 +97,7 @@ export function CheckoutClient() {
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
+      const rzp = new (window as unknown as { Razorpay: new (options: unknown) => { open: () => void } }).Razorpay(options);
       rzp.open();
     } catch (error) {
       console.error('Payment Error:', error);
