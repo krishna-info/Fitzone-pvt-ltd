@@ -2,16 +2,8 @@
 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import L from 'leaflet';
-
-// Fix Leaflet icon issue
-const icon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
 
 interface MapInnerProps {
   lat: number;
@@ -20,8 +12,12 @@ interface MapInnerProps {
 }
 
 export default function LeafletMapInner({ lat, lng, popupText }: MapInnerProps) {
-  // Leaflet marker fix
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    setIsMounted(true);
+    
+    // Fix Leaflet icon issue
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (L.Icon.Default.prototype as any)._getIconUrl;
     L.Icon.Default.mergeOptions({
@@ -30,6 +26,10 @@ export default function LeafletMapInner({ lat, lng, popupText }: MapInnerProps) 
       shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
     });
   }, []);
+
+  if (!isMounted) {
+    return <div className="w-full h-full bg-gray-100 flex items-center justify-center text-brand-muted">Loading Map...</div>;
+  }
 
   return (
     <MapContainer 
@@ -42,9 +42,11 @@ export default function LeafletMapInner({ lat, lng, popupText }: MapInnerProps) 
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <Marker position={[lat, lng]} icon={icon}>
+      <Marker position={[lat, lng]}>
         <Popup>
-          {popupText}
+          <div className="p-1">
+            <p className="font-bold text-brand-dark">{popupText}</p>
+          </div>
         </Popup>
       </Marker>
     </MapContainer>

@@ -1,19 +1,49 @@
 import { MetadataRoute } from 'next';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://fitzone.in';
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = 'https://fitzoneapparel.in'; // Replace with actual domain
+  const supabase = createSupabaseServerClient();
 
-  const staticRoutes = [
-    { url: baseUrl, priority: 1.0, changeFrequency: 'monthly' as const },
-    { url: `${baseUrl}/about`, priority: 0.8, changeFrequency: 'monthly' as const },
-    { url: `${baseUrl}/manufacturing`, priority: 0.8, changeFrequency: 'monthly' as const },
-    { url: `${baseUrl}/certifications`, priority: 0.7, changeFrequency: 'monthly' as const },
-    { url: `${baseUrl}/gallery`, priority: 0.7, changeFrequency: 'weekly' as const },
-    { url: `${baseUrl}/products`, priority: 0.9, changeFrequency: 'weekly' as const },
-    { url: `${baseUrl}/contact`, priority: 0.8, changeFrequency: 'yearly' as const },
-    { url: `${baseUrl}/privacy`, priority: 0.3, changeFrequency: 'yearly' as const },
-    { url: `${baseUrl}/terms`, priority: 0.3, changeFrequency: 'yearly' as const },
+  // Fetch blog posts
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('slug, updated_at')
+    .eq('is_published', true);
+
+  const blogUrls = (posts || []).map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updated_at || new Date()),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  const staticUrls = [
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 1,
+    },
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    },
+    {
+      url: `${baseUrl}/products`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
   ];
 
-  return staticRoutes;
+  return [...staticUrls, ...blogUrls];
 }

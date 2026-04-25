@@ -26,7 +26,7 @@ export function AboutSnapshot() {
             </div>
             
             <p className="text-lg text-brand-muted leading-relaxed">
-              Since 2023, FitZone Apparels has been at the forefront of textile innovation in Haryana. We combine state-of-the-art machinery with skilled craftsmanship to produce athletic wear that stands the test of time.
+              Since 2023, FitZone Apparels has been at the forefront of textile innovation in Rajasthan. We combine state-of-the-art machinery with skilled craftsmanship to produce athletic wear that stands the test of time.
             </p>
             
             <div className="grid grid-cols-2 gap-8 py-4">
@@ -59,7 +59,7 @@ export function AboutSnapshot() {
           >
             <div className="aspect-[4/3] rounded-brand-lg overflow-hidden shadow-float relative z-10">
                <Image 
-                 src="https://images.unsplash.com/photo-1558444479-f8f53994c341?q=80&w=2070&auto=format&fit=crop" 
+                 src="https://images.unsplash.com/photo-1551232864-3f0890e580d9?q=80&w=2070&auto=format&fit=crop" 
                  alt="FitZone Manufacturing Facility"
                  fill
                  className="object-cover"

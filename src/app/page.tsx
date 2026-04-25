@@ -1,10 +1,22 @@
-import Link from 'next/link';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { TrustBar } from '@/components/sections/TrustBar';
 import { AboutSnapshot } from '@/components/sections/AboutSnapshot';
 import { ManufacturingProcess } from '@/components/sections/ManufacturingProcess';
+import { GalleryPreview } from '@/components/sections/GalleryPreview';
+import { LatestInsightsSection } from '@/components/sections/LatestInsightsSection';
+import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import Link from 'next/link';
 
-export default function Home() {
+export default async function Home() {
+  const supabase = createSupabaseAdminClient();
+  
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('id, slug, title, excerpt, image, category')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+    .limit(3);
+
   return (
     <>
       <HeroSection />
@@ -12,24 +24,16 @@ export default function Home() {
       <AboutSnapshot />
       <ManufacturingProcess />
       
-      {/* Gallery Preview Placeholder */}
-      <section className="py-24 bg-white">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark">Our Gallery</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-             {[1,2,3,4].map(i => (
-                <div key={i} className="aspect-square bg-gray-100 rounded-brand overflow-hidden shadow-card" />
-             ))}
-          </div>
-        </div>
-      </section>
+      <GalleryPreview />
+
+      <LatestInsightsSection posts={posts || []} />
 
       {/* CTA Banner Section */}
       <section className="py-20 bg-brand-dark text-white text-center">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <h2 className="text-3xl md:text-5xl font-extrabold leading-tight">Ready to start your <br /> next project together?</h2>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href="/contact" className="px-8 py-4 bg-brand-secondary rounded-brand font-bold hover:bg-brand-secondary/90 transition-all">
+            <Link href="/contact" className="px-8 py-4 bg-brand-secondary rounded-brand font-bold hover:bg-brand-secondary/90 transition-all text-brand-dark">
               Get an Estimate
             </Link>
             <Link href="/products" className="px-8 py-4 bg-white/10 rounded-brand font-bold hover:bg-white/20 transition-all">

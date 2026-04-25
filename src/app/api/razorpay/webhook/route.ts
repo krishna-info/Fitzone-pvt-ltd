@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 import crypto from 'crypto';
 
 // Razorpay sends a signature we must verify with our secret
@@ -28,7 +28,8 @@ export async function POST(request: Request) {
     if (eventType === 'payment.captured' || eventType === 'payment.failed') {
       const payment = payload?.payment?.entity;
       if (payment && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        await supabaseAdmin.from('payments').insert({
+        const supabase = createSupabaseAdminClient();
+        await supabase.from('payments').insert({
           razorpay_order_id: payment.order_id,
           razorpay_payment_id: payment.id,
           amount: payment.amount,

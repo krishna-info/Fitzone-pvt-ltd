@@ -3,7 +3,7 @@ import { CheckCircle } from 'lucide-react';
 const TRUST_ITEMS = [
   { text: '2+ Years Experience' },
   { text: 'Quality Certified' },
-  { text: 'Made in Haryana' },
+  { text: 'Made in Rajasthan' },
 ];
 
 export function TrustBar() {

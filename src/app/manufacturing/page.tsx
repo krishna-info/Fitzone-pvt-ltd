@@ -9,7 +9,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Manufacturing Excellence | FitZone Apparels',
-  description: 'Explore our state-of-the-art manufacturing facility and precision production process in Haryana.',
+  description: 'Explore our state-of-the-art manufacturing facility and precision production process in Rajasthan.',
 };
 
 export default function ManufacturingPage() {

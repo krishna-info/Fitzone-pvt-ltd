@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { FileText, CreditCard, Package, ShoppingBag, MessageCircle, Users, LayoutDashboard, LogOut, ChevronRight } from 'lucide-react';
 import { signOut } from './actions';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | FitZone Apparels',
@@ -10,30 +10,32 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminDashboard() {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   // Fetch counts and stats
   const [
     { count: enquiriesCount },
     { count: productsCount },
     { data: paymentsData },
-    { count: newEnquiriesCount }
+    { count: newEnquiriesCount },
+    { count: postsCount }
   ] = await Promise.all([
     supabase.from('contact_enquiries').select('*', { count: 'exact', head: true }),
     supabase.from('products').select('*', { count: 'exact', head: true }),
     supabase.from('payments').select('amount').eq('status', 'captured'),
     supabase.from('contact_enquiries')
       .select('*', { count: 'exact', head: true })
-      .gt('submitted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .gt('submitted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+    supabase.from('posts').select('*', { count: 'exact', head: true })
   ]);
 
   const totalPayments = (paymentsData || []).reduce((acc, curr) => acc + (curr.amount / 100), 0);
 
   const STATS = [
     { label: 'Total Enquiries', value: enquiriesCount || 0, icon: FileText, color: 'text-blue-500' },
-    { label: 'New (24h)', value: newEnquiriesCount || 0, icon: MessageCircle, color: 'text-green-500' },
     { label: 'Total Revenue', value: `₹${totalPayments.toLocaleString()}`, icon: CreditCard, color: 'text-amber-500' },
     { label: 'Live Products', value: productsCount || 0, icon: Package, color: 'text-purple-500' },
+    { label: 'Blog Articles', value: postsCount || 0, icon: FileText, color: 'text-red-500' },
   ];
 
   const QUICK_LINKS = [
@@ -42,6 +44,7 @@ export default async function AdminDashboard() {
     { label: 'Enquiries', href: '/admin/enquiries', icon: FileText, description: 'View and manage contact form submissions' },
     { label: 'Payments', href: '/admin/payments', icon: CreditCard, description: 'Track Razorpay payment success/failures' },
     { label: 'Products', href: '/admin/products', icon: Package, description: 'Add, edit, and manage your catalogue' },
+    { label: 'Blog', href: '/admin/blog', icon: FileText, description: 'Publish articles and manage guest posts' },
   ];
 
   return (

@@ -17,7 +17,7 @@ export function BrandStory() {
             <h2 className="text-3xl md:text-4xl font-bold text-brand-dark">Built on Quality, <br /><span className="text-brand-primary">Driven by Performance.</span></h2>
             <div className="prose prose-lg text-brand-muted">
               <p>
-                Founded in Haryana, FitZone Apparels Pvt. Ltd. was born out of a passion for excellence in athletic wear. What started as a small manufacturing unit has evolved into a state-of-the-art facility serving clients across the country.
+                Founded in Rajasthan, FitZone Apparels Pvt. Ltd. was born out of a passion for excellence in athletic wear. What started as a small manufacturing unit has evolved into a state-of-the-art facility serving clients across the country.
               </p>
               <p>
                 Our philosophy is simple: athlete-first design. Every stitch, every fabric choice, and every manufacturing step is optimized to provide maximum comfort and durability for the high-performance lifestyle.

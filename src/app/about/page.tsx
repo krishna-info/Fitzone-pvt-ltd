@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'About Us | FitZone Apparels',
-  description: 'Learn about our legacy in manufacturing high-performance athletic wear in Haryana, India.',
+  description: 'Learn about our legacy in manufacturing high-performance athletic wear in Rajasthan, India.',
 };
 
 export default function AboutPage() {

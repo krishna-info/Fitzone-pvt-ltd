@@ -13,7 +13,7 @@ export function LocationMap() {
     <section className="py-24 bg-white">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center space-y-4">
-          <h2 className="text-3xl font-bold text-brand-dark">Find Us In Haryana</h2>
+          <h2 className="text-3xl font-bold text-brand-dark">Find Us In Jodhpur</h2>
           <p className="text-brand-muted">Visit our facility to see excellence in action.</p>
         </div>
         
@@ -24,9 +24,9 @@ export function LocationMap() {
            className="w-full h-[500px] rounded-brand-lg overflow-hidden shadow-card relative border border-gray-100"
         >
           <LeafletMapInner 
-            lat={29.1492} 
-            lng={75.7217} 
-            popupText="FitZone Apparels Pvt. Ltd., Haryana, India" 
+            lat={26.2389} 
+            lng={73.0243} 
+            popupText="FitZone Apparels Pvt. Ltd., Jodhpur, Rajasthan, India" 
           />
         </motion.div>
       </div>

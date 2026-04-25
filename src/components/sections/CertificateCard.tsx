@@ -10,12 +10,12 @@ interface Certificate {
   issuedBy: string;
   issuedDate: string;
   cloudinaryId: string;
+  imageUrl?: string;
   alt: string;
 }
 
 export function CertificateCard({ cert }: { cert: Certificate }) {
-  // Cloudinary Placeholder
-  const imageUrl = `https://res.cloudinary.com/demo/image/upload/v1652345767/docs/certificate_placeholder.png`;
+  const imageUrl = cert.imageUrl || `https://res.cloudinary.com/demo/image/upload/v1652345767/docs/certificate_placeholder.png`;
 
   return (
     <motion.div
@@ -25,7 +25,7 @@ export function CertificateCard({ cert }: { cert: Certificate }) {
       className="bg-white p-6 rounded-brand-lg border border-gray-100 shadow-card hover:shadow-card-hover transition-all space-y-4"
     >
       <div className="aspect-[3/4] relative rounded-brand overflow-hidden bg-gray-50 border border-gray-100">
-        <Image 
+        <Image
           src={imageUrl}
           alt={cert.alt}
           fill
@@ -37,19 +37,19 @@ export function CertificateCard({ cert }: { cert: Certificate }) {
         <p className="text-xs text-brand-muted uppercase font-semibold">{cert.issuedBy}</p>
         <p className="text-xs text-brand-muted">Issued: {cert.issuedDate}</p>
       </div>
-      
-      <Modal 
+
+      <Modal
         trigger={<Button variant="outline" className="w-full">View Certificate</Button>}
         title={cert.name}
         description={`Issued by ${cert.issuedBy} on ${cert.issuedDate}`}
       >
         <div className="aspect-[3/4] relative w-full bg-gray-50 rounded-brand overflow-hidden">
-           <Image 
-             src={imageUrl}
-             alt={cert.alt}
-             fill
-             className="object-contain p-4"
-           />
+          <Image
+            src={imageUrl}
+            alt={cert.alt}
+            fill
+            className="object-contain p-4"
+          />
         </div>
       </Modal>
     </motion.div>

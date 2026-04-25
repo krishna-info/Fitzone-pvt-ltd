@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
   try {
@@ -34,7 +34,8 @@ export async function POST(req: Request) {
     const total = subtotal + shipping;
 
     // 3. Create Order in Supabase
-    const { data: order, error: orderError } = await supabaseAdmin
+    const supabase = createSupabaseAdminClient();
+    const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
         customer_name: customerDetails.name,
@@ -64,14 +65,14 @@ export async function POST(req: Request) {
       price_at_purchase: item.price || 0,
     }));
 
-    const { error: itemsError } = await supabaseAdmin
+    const { error: itemsError } = await supabase
       .from('order_items')
       .insert(orderItems);
 
     if (itemsError) throw itemsError;
 
     // 5. Log Payment
-    await supabaseAdmin.from('payments').insert({
+    await supabase.from('payments').insert({
       order_id: order.id,
       razorpay_order_id,
       razorpay_payment_id,

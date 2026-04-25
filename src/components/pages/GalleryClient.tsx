@@ -7,13 +7,14 @@ import Image from 'next/image';
 const CATEGORIES = ['All', 'Manufacturing', 'Products', 'Facility'];
 
 const GALLERY_IMAGES = [
-  { id: 1, category: 'Manufacturing', title: 'Stitching Unit', src: 'https://images.unsplash.com/photo-1558444479-f8f53994c341?q=80&w=2070' },
-  { id: 2, category: 'Products', title: 'Performance Tracksuit', src: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1920' },
-  { id: 3, category: 'Facility', title: 'Haryana Warehouse', src: 'https://images.unsplash.com/photo-1586528116311-ad86d790d798?q=80&w=2070' },
-  { id: 4, category: 'Manufacturing', title: 'Fabric Cutting', src: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?q=80&w=2072' },
-  { id: 5, category: 'Products', title: 'Compression Shirt', src: 'https://images.unsplash.com/photo-1539185441755-769473a23a5e?q=80&w=2070' },
+  { id: 1, category: 'Manufacturing', title: 'Stitching Unit', src: 'https://images.unsplash.com/photo-1555529669-26f9d103abdd?q=80&w=2070' },
+  { id: 2, category: 'Products', title: 'Performance Tracksuit', src: 'https://images.unsplash.com/photo-1483721310020-03333e577078?q=80&w=1920' },
+  { id: 3, category: 'Facility', title: 'Rajasthan Warehouse', src: 'https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2070' },
+  { id: 4, category: 'Manufacturing', title: 'Fabric Cutting', src: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=2072' },
+  { id: 5, category: 'Products', title: 'Compression Shirt', src: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070' },
   { id: 6, category: 'Manufacturing', title: 'Quality Check', src: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070' },
 ];
+
 
 export default function GalleryClient() {
   const [filter, setFilter] = useState('All');

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createSupabaseAdminClient } from '@/lib/supabase-admin';
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,8 @@ export async function POST(request: Request) {
 
     // Insert into Supabase contact_enquiries table
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const { error: dbError } = await supabaseAdmin
+      const supabase = createSupabaseAdminClient();
+      const { error: dbError } = await supabase
         .from('contact_enquiries')
         .insert({
           name: 'Bulk Enquiry (Cart)',

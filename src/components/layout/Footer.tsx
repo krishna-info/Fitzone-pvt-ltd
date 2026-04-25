@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
-import { NAV_LINKS, WHATSAPP_NUMBER, CONTACT_EMAIL, CONTACT_PHONE } from '@/lib/constants';
+import { Mail, Phone, MapPin, MessageCircle, FileText } from 'lucide-react';
+import { NAV_LINKS, WHATSAPP_NUMBER, CONTACT_EMAIL, CONTACT_PHONE, LEGAL_NAME, BUSINESS_ADDRESS, GSTIN } from '@/lib/constants';
 
 // Simple SVG icons for social platforms not in lucide-react
 function InstagramIcon({ className }: { className?: string }) {
@@ -38,9 +38,15 @@ export function Footer() {
             <p className="text-gray-400 text-sm leading-relaxed italic">
               &ldquo;Comfort That Moves With You.&rdquo;
             </p>
-            <p className="text-gray-500 text-xs leading-relaxed">
-              FitZone Apparels Pvt. Ltd. — Premium athletic wear manufacturer based in Haryana, India.
-            </p>
+            <div className="space-y-2">
+              <p className="text-gray-500 text-xs leading-relaxed">
+                {LEGAL_NAME} — Premium athletic wear manufacturer based in Rajasthan, India.
+              </p>
+              <div className="flex items-center gap-2 text-gray-500 text-xs">
+                <FileText className="w-3 h-3 text-brand-secondary" />
+                <span>GSTIN: {GSTIN}</span>
+              </div>
+            </div>
             {/* Social Links */}
             <div className="flex items-center gap-4">
               <a
@@ -93,7 +99,7 @@ export function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start space-x-3 text-gray-400">
                 <MapPin className="w-5 h-5 text-brand-secondary flex-shrink-0" />
-                <span className="text-sm">Haryana, India</span>
+                <span className="text-sm">{BUSINESS_ADDRESS}</span>
               </li>
               <li>
                 <a href={`tel:${CONTACT_PHONE.replace(/\s/g, '')}`} className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
@@ -135,7 +141,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 space-y-4 md:space-y-0">
-          <p>© {currentYear} FitZone Apparels Pvt. Ltd. All rights reserved.</p>
+          <p>© {currentYear} {LEGAL_NAME}. All rights reserved.</p>
           <p>Made with ❤️ in India</p>
         </div>
       </div>

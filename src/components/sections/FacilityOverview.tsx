@@ -16,7 +16,7 @@ export function FacilityOverview() {
           >
             <h2 className="text-3xl md:text-4xl font-bold text-brand-dark">Built for <span className="text-brand-primary">Scale & Precision.</span></h2>
             <p className="text-lg text-brand-muted leading-relaxed">
-              Our Haryana-based manufacturing facility is equipped with the latest garment-making machinery, specialized for high-performance athletic wear. We maintain strict environmental and safety standards to ensure a sustainable production environment.
+              Our Jodhpur-based manufacturing facility is equipped with the latest garment-making machinery, specialized for high-performance athletic wear. We maintain strict environmental and safety standards to ensure a sustainable production environment.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                <div className="p-4 bg-brand-surface rounded-brand border border-gray-100">
@@ -32,7 +32,7 @@ export function FacilityOverview() {
           <div className="grid grid-cols-2 gap-4">
              <div className="aspect-[3/4] rounded-brand-lg overflow-hidden relative shadow-card">
                 <Image 
-                  src="https://images.unsplash.com/photo-1558444479-f8f53994c341?q=80&w=2070&auto=format&fit=crop" 
+                  src="https://images.unsplash.com/photo-1565034946487-077786996e27?q=80&w=2070&auto=format&fit=crop" 
                   alt="Factory Floor"
                   fill
                   className="object-cover"
@@ -40,7 +40,7 @@ export function FacilityOverview() {
              </div>
              <div className="aspect-[3/4] rounded-brand-lg overflow-hidden relative shadow-card mt-8">
                 <Image 
-                   src="https://images.unsplash.com/photo-1504198266287-1659872e6590?q=80&w=2070&auto=format&fit=crop" 
+                   src="https://images.unsplash.com/photo-1555529669-26f9d103abdd?q=80&w=2070&auto=format&fit=crop" 
                    alt="Stitching Unit"
                    fill
                    className="object-cover"

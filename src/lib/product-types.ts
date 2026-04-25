@@ -22,9 +22,10 @@ export interface ProductCategory {
 }
 
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
-  { name: 'T-Shirts & Jerseys', slug: 't-shirts-jerseys', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1780' },
-  { name: 'Shorts & Track Pants', slug: 'shorts-track-pants', image: 'https://images.unsplash.com/photo-1552664199-fd31f7431a55?q=80&w=1887' },
-  { name: 'Jackets & Hoodies', slug: 'jackets-hoodies', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=1935' },
-  { name: 'Compression Wear', slug: 'compression-wear', image: 'https://images.unsplash.com/photo-1539185441755-769473a23a5e?q=80&w=2070' },
-  { name: 'Accessories', slug: 'accessories', image: 'https://images.unsplash.com/photo-1584931423298-c576fda54bd2?q=80&w=2070' },
+  { name: 'T-Shirts & Jerseys', slug: 't-shirts-jerseys', image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?q=80&w=1780' },
+  { name: 'Shorts & Track Pants', slug: 'shorts-track-pants', image: 'https://images.unsplash.com/photo-1591195853828-11db59a44f6b?q=80&w=1780' },
+  { name: 'Jackets & Hoodies', slug: 'jackets-hoodies', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=1780' },
+  { name: 'Compression Wear', slug: 'compression-wear', image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1780' },
+  { name: 'Accessories', slug: 'accessories', image: 'https://images.unsplash.com/photo-1514994667787-b48ca37155f0?q=80&w=1780' },
 ];
+

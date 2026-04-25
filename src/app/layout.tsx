@@ -17,7 +17,12 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'FitZone Apparels - Quality Manufacturing',
-  description: 'FitZone Apparels Pvt. Ltd., Haryana, India. Manufacturers of high-quality athletic wear, track pants, and more.',
+  description: 'FitZone Apparels Pvt. Ltd., Rajasthan, India. Manufacturers of high-quality athletic wear, track pants, and more.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  }
 };
 
 import { Navbar } from '@/components/layout/Navbar';
@@ -26,6 +31,8 @@ import { WhatsAppButton } from '@/components/ui/WhatsAppButton';
 import { ShoppingCart } from '@/components/ui/ShoppingCart';
 import { CookieConsent } from '@/components/ui/CookieConsent';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema';
+import WebsiteSchema from '@/components/seo/WebsiteSchema';
 
 export default function RootLayout({
   children,
@@ -35,7 +42,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="antialiased font-sans bg-brand-surface text-brand-dark min-h-screen flex flex-col">
+        <LocalBusinessSchema />
+        <WebsiteSchema />
         <Navbar />
+
         <main id="main-content" className="flex-grow">
           {children}
         </main>
