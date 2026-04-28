@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PRODUCT_CATEGORIES, getProductsByCategory } from '@/lib/products';
-import { ProductCard } from '@/components/sections/ProductCard';
+import { ProductListWithPagination } from '@/components/sections/ProductListWithPagination';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+
 
 interface Props {
   params: { category: string };
@@ -26,7 +27,7 @@ export default async function CategoryPage({ params }: Props) {
   const category = PRODUCT_CATEGORIES.find(c => c.slug === params.category);
   if (!category) notFound();
 
-  const products = await getProductsByCategory(params.category);
+  const products = await getProductsByCategory(params.category, 12);
 
   return (
     <div className="bg-brand-surface min-h-screen">
@@ -40,7 +41,7 @@ export default async function CategoryPage({ params }: Props) {
             <span className="text-white">{category.name}</span>
           </nav>
           <h1 className="text-3xl md:text-4xl font-extrabold text-white uppercase tracking-tight">{category.name}</h1>
-          <p className="mt-3 text-gray-400">{products.length} products available</p>
+          <p className="mt-3 text-gray-400">{category.name} wholesale catalogue</p>
         </div>
       </section>
 
@@ -53,14 +54,11 @@ export default async function CategoryPage({ params }: Props) {
               <p className="mt-2 text-sm">Products in this category will be listed shortly.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map(product => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <ProductListWithPagination initialProducts={products} categorySlug={params.category} />
           )}
         </div>
       </section>
     </div>
   );
+
 }

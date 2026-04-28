@@ -39,10 +39,14 @@ export function ProductCard({ product }: { product: Product }) {
             <span className="font-black text-brand-primary text-lg">
               {product.is_enquiry_only ? 'Enquiry' : `₹${product.price_inr?.toLocaleString()}`}
             </span>
-            <span className="flex items-center gap-1 text-[10px] text-brand-muted uppercase font-bold tracking-tighter">
-              <Truck className="w-3 h-3 text-brand-secondary" /> Fast Delivery
-            </span>
+            <div className="flex flex-col items-end">
+              <span className="flex items-center gap-1 text-[10px] text-brand-muted uppercase font-bold tracking-tighter">
+                <Truck className="w-3 h-3 text-brand-secondary" /> Fast Delivery
+              </span>
+              <span className="text-[10px] text-brand-primary font-black uppercase">MOQ: {product.moq} pcs</span>
+            </div>
           </div>
+
         </div>
         
         <div className="pt-2">

@@ -50,10 +50,11 @@ export function ProductDetailClient({
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
-      `Hi FitZone, I'd like to enquire about a BULK ORDER for: *${product.name}*\n\nPlease share wholesale pricing. Thank you!`
+      `Hi FitZone, I'd like to enquire about a BULK ORDER for: *${product.name}*\n\nMy requirement is above the MOQ of ${product.moq} pcs.\n\nPlease share wholesale pricing. Thank you!`
     );
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
   };
+
 
   const [activeTab, setActiveTab] = useState<'features' | 'specs'>('features');
 
@@ -134,6 +135,9 @@ export function ProductDetailClient({
                 {!product.is_enquiry_only && (
                   <span className="text-sm text-brand-muted mb-1 font-medium">Incl. all taxes</span>
                 )}
+                <div className="ml-auto bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full border border-brand-primary/20">
+                  <span className="text-[10px] font-black uppercase tracking-widest">MOQ: {product.moq} Units</span>
+                </div>
               </div>
             </div>
 

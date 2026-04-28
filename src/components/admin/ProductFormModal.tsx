@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Product } from '@/lib/product-types';
+import { Product, PRODUCT_CATEGORIES } from '@/lib/product-types';
 import { Button } from '@/components/ui/Button';
 import { updateProduct, createProduct } from '@/app/admin/products/actions';
 import { Modal } from '@/components/ui/Modal';
@@ -25,14 +25,31 @@ export function ProductFormModal({ product }: ProductFormProps) {
       if (isEdit) {
         await updateProduct(formData);
       } else {
-        // Simple create logic for now, missing images/slug generation in this demo
-        const data = Object.fromEntries(formData.entries()) as unknown as Omit<Product, 'id' | 'created_at'>;
+        const name = formData.get('name') as string;
+        const slug = formData.get('slug') as string;
+        const category_slug = formData.get('category_slug') as string;
+        const price_inr = parseInt(formData.get('price_inr') as string);
+        const moq = parseInt(formData.get('moq') as string) || 1;
+        const description = formData.get('description') as string;
+        const is_active = formData.get('is_active') === 'true';
+        const images_list = formData.get('images_list') as string;
+        const images = images_list ? images_list.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+        const categoryName = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
+
         await createProduct({
-          ...data,
-          images: [], // Needs proper upload logic
-          is_active: String(data.is_active) === 'true',
-          price_inr: parseInt(String(data.price_inr)),
-          moq: parseInt(String(data.moq)) || 1,
+          name,
+          slug,
+          category_slug,
+          price_inr,
+          moq,
+          images,
+          description,
+          is_active,
+          category: categoryName,
+          is_enquiry_only: false,
+          features: [],
+          specifications: {}
         });
       }
       setOpen(false);
@@ -64,14 +81,26 @@ export function ProductFormModal({ product }: ProductFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {isEdit && <input type="hidden" name="id" value={product.id} />}
         
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Product Name</label>
-          <input 
-            name="name" 
-            required 
-            defaultValue={product?.name} 
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Product Name</label>
+            <input 
+              name="name" 
+              required 
+              defaultValue={product?.name} 
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Slug</label>
+            <input 
+              name="slug" 
+              required 
+              placeholder="performance-tshirt"
+              defaultValue={product?.slug} 
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -82,6 +111,29 @@ export function ProductFormModal({ product }: ProductFormProps) {
               type="number" 
               required 
               defaultValue={product?.price_inr} 
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">MOQ (pcs)</label>
+            <input 
+              name="moq" 
+              type="number" 
+              required 
+              defaultValue={product?.moq || 50} 
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category Slug</label>
+            <input 
+              name="category_slug" 
+              required 
+              placeholder="t-shirts-jerseys"
+              defaultValue={product?.category_slug} 
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
@@ -99,14 +151,27 @@ export function ProductFormModal({ product }: ProductFormProps) {
         </div>
 
         <div className="space-y-2">
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Image URLs (comma separated)</label>
+          <textarea 
+            name="images_list" 
+            rows={2} 
+            required
+            placeholder="https://url1.com, https://url2.com"
+            defaultValue={product?.images.join(', ')} 
+            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
+          />
+        </div>
+
+        <div className="space-y-2">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Description</label>
           <textarea 
             name="description" 
-            rows={4} 
+            rows={3} 
             defaultValue={product?.description} 
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
           />
         </div>
+
 
         <Button type="submit" className="w-full h-12" disabled={loading}>
           {loading ? 'Saving Changes...' : (isEdit ? 'Update Product' : 'Create Product')}

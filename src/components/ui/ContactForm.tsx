@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { contactSchema, type ContactFormData } from '@/lib/validations/contactSchema';
 import { Button } from '@/components/ui/Button';
-import { TurnstileWidget } from '@/components/ui/TurnstileWidget';
+
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -122,11 +122,6 @@ export function ContactForm() {
           placeholder="Tell us about your requirements..."
         />
         {errors.message && <p className="text-xs text-red-500">{errors.message.message}</p>}
-      </div>
-
-      <div className="flex flex-col space-y-4">
-        <TurnstileWidget onSuccess={(token) => setValue('turnstileToken', token)} />
-        {errors.turnstileToken && <p className="text-xs text-red-500">{errors.turnstileToken.message}</p>}
       </div>
 
       <Button type="submit" disabled={isSubmitting} className="w-full h-12 text-lg">

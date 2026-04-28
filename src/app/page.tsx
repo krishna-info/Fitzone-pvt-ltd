@@ -5,6 +5,7 @@ import { ManufacturingProcess } from '@/components/sections/ManufacturingProcess
 import { GalleryPreview } from '@/components/sections/GalleryPreview';
 import { LatestInsightsSection } from '@/components/sections/LatestInsightsSection';
 import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getLatestProducts } from '@/lib/products';
 import Link from 'next/link';
 
 export default async function Home() {
@@ -17,6 +18,8 @@ export default async function Home() {
     .order('published_at', { ascending: false })
     .limit(3);
 
+  const latestProducts = await getLatestProducts(5);
+
   return (
     <>
       <HeroSection />
@@ -24,7 +27,7 @@ export default async function Home() {
       <AboutSnapshot />
       <ManufacturingProcess />
       
-      <GalleryPreview />
+      <GalleryPreview products={latestProducts} />
 
       <LatestInsightsSection posts={posts || []} />
 

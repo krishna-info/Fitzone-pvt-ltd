@@ -3,14 +3,23 @@ import { Product } from './product-types';
 
 export * from './product-types';
 
-// Fetch all active products from Supabase
-export async function getAllProducts(): Promise<Product[]> {
+// Fetch all active products from Supabase with pagination
+export async function getAllProducts(limit?: number, offset?: number): Promise<Product[]> {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select('*')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
+
+  if (limit) {
+    query = query.limit(limit);
+  }
+  if (offset) {
+    query = query.range(offset, offset + (limit || 10) - 1);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error('Error fetching products:', error.message);
@@ -19,18 +28,44 @@ export async function getAllProducts(): Promise<Product[]> {
   return data ?? [];
 }
 
-// Fetch products by category slug
-export async function getProductsByCategory(categorySlug: string): Promise<Product[]> {
+// Fetch products by category slug with pagination
+export async function getProductsByCategory(categorySlug: string, limit?: number, offset?: number): Promise<Product[]> {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select('*')
     .eq('category_slug', categorySlug)
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
+  if (limit) {
+    query = query.limit(limit);
+  }
+  if (offset) {
+    query = query.range(offset, offset + (limit || 10) - 1);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
     console.error('Error fetching products by category:', error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+// Fetch latest products for homepage gallery
+export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching latest products:', error.message);
     return [];
   }
   return data ?? [];
@@ -48,3 +83,4 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (error) return null;
   return data;
 }
+
