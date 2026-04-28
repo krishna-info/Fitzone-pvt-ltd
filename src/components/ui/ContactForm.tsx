@@ -92,11 +92,23 @@ export function ContactForm() {
             type="tel"
             {...register('phone')}
             className={`w-full px-4 py-3 rounded-brand border ${errors.phone ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-brand-primary outline-none transition-all`}
-            placeholder="9876543210"
+            placeholder="+91 98765 43210"
           />
           {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
         </div>
 
+        <div className="space-y-2">
+          <label htmlFor="companyName" className="text-sm font-semibold text-brand-dark">Company Name (Optional)</label>
+          <input
+            id="companyName"
+            {...register('companyName')}
+            className="w-full px-4 py-3 rounded-brand border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none transition-all"
+            placeholder="Your Business Name"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label htmlFor="enquiryType" className="text-sm font-semibold text-brand-dark">Enquiry Type</label>
           <select

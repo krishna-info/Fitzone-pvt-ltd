@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, email, phone, enquiryType, message } = parsed.data;
+    const { name, email, phone, enquiryType, message, companyName } = parsed.data;
 
     // 3. Insert into Supabase
     if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
           name,
           email,
           phone: phone ?? null,
+          company_name: companyName ?? null,
           enquiry_type: enquiryType ?? 'general',
           message,
         });
