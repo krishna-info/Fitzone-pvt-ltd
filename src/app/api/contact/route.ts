@@ -26,7 +26,7 @@ export async function POST(request: Request) {
           name,
           email,
           phone: phone ?? null,
-          company_name: companyName ?? null,
+          company_name: companyName ?? null, // TODO: Add company_name column to Supabase table
           enquiry_type: enquiryType ?? 'general',
           message,
         });

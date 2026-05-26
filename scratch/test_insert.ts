@@ -18,7 +18,8 @@ async function inspectTable() {
       name: 'Test Agent',
       email: 'test@example.com',
       message: 'This is a test message to check schema constraints.',
-      enquiry_type: 'general'
+      enquiry_type: 'general',
+      company_name: 'Test Company'
     })
     .select();
 
