@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   title: 'Order Status | FitZone Apparels',
 };
 
-export const runtime = 'edge';
 
 export default async function OrderLookupPage({ params }: { params: { id: string } }) {
   const db = getDb();

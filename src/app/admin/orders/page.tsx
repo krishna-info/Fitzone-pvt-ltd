@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 
 import { Order } from '@/types/admin';
 
-export const runtime = 'edge';
 
 export default async function AdminOrdersPage() {
   const db = getDb();

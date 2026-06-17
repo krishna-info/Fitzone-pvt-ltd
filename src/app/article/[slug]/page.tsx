@@ -10,7 +10,6 @@ interface Props {
   params: { slug: string };
 }
 
-export const runtime = 'edge';
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = getDb();

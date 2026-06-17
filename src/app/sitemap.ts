@@ -1,7 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getDb } from '@/lib/db';
 
-export const runtime = 'edge';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://fitzoneapparel.in'; // Replace with actual domain

@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   title: 'Enquiries | FitZone Admin',
 };
 
-export const runtime = 'edge';
 
 export default async function EnquiriesPage() {
   const db = getDb();

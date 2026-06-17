@@ -8,7 +8,6 @@ import { getDb } from '@/lib/db';
 import { getLatestProducts } from '@/lib/products';
 import Link from 'next/link';
 
-export const runtime = 'edge';
 
 export default async function Home() {
   const db = getDb();

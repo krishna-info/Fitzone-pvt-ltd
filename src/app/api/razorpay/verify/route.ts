@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 
-export const runtime = 'edge';
 
 async function verifySignature(body: string, signature: string, secret: string) {
   const enc = new TextEncoder();

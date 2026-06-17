@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 
-export const runtime = 'edge';
 
 // Razorpay sends a signature we must verify with our secret
 async function verifyWebhookSignature(body: string, signature: string, secret: string): Promise<boolean> {

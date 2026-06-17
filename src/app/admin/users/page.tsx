@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   title: 'User Management | FitZone Admin',
 };
 
-export const runtime = 'edge';
 
 export default async function AdminUsersPage() {
   const users = await getUsers();
