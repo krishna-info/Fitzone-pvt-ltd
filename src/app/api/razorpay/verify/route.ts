@@ -1,6 +1,21 @@
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
+
+export const runtime = 'edge';
+
+async function verifySignature(body: string, signature: string, secret: string) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signatureBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(body));
+  const hashArray = Array.from(new Uint8Array(signatureBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('') === signature;
+}
 
 export async function POST(req: Request) {
   try {
@@ -10,7 +25,7 @@ export async function POST(req: Request) {
       razorpay_signature,
       customerDetails,
       items
-    } = await req.json();
+    } = (await req.json()) as any;
 
     // 1. Verify Signature
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -19,12 +34,9 @@ export async function POST(req: Request) {
     }
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac('sha256', keySecret)
-      .update(body.toString())
-      .digest('hex');
+    const isValid = await verifySignature(body.toString(), razorpay_signature, keySecret);
 
-    if (expectedSignature !== razorpay_signature) {
+    if (!isValid) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
@@ -33,53 +45,33 @@ export async function POST(req: Request) {
     const shipping = subtotal > 1000 ? 0 : 150;
     const total = subtotal + shipping;
 
-    // 3. Create Order in Supabase
-    const supabase = createSupabaseAdminClient();
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_name: customerDetails.name,
-        customer_email: customerDetails.email,
-        customer_phone: customerDetails.phone,
-        shipping_address: customerDetails.address,
-        city: customerDetails.city,
-        pincode: customerDetails.pincode,
-        subtotal,
-        shipping,
-        total,
-        status: 'processing',
-        payment_id: razorpay_payment_id,
-        razorpay_order_id: razorpay_order_id,
-      })
-      .select()
-      .single();
+    // 3. Create Order in D1
+    const db = getDb();
+    const { results: orderResults } = await db.prepare(`
+      INSERT INTO orders (
+        customer_name, customer_email, customer_phone, shipping_address, city, pincode, subtotal, shipping, total, status, payment_id, razorpay_order_id
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      RETURNING *
+    `).bind(
+      customerDetails.name, customerDetails.email, customerDetails.phone, customerDetails.address, customerDetails.city, customerDetails.pincode, subtotal, shipping, total, 'processing', razorpay_payment_id, razorpay_order_id
+    ).all<any>();
 
-    if (orderError) throw orderError;
+    const order = orderResults[0];
 
     // 4. Create Order Items
-    const orderItems = items.map((item: { productId: string; name: string; quantity: number; price?: number }) => ({
-      order_id: order.id,
-      product_id: item.productId,
-      product_name: item.name,
-      quantity: item.quantity,
-      price_at_purchase: item.price || 0,
-    }));
-
-    const { error: itemsError } = await supabase
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) throw itemsError;
+    for (const item of items) {
+      await db.prepare(`
+        INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(order.id, item.productId, item.name, item.quantity, item.price || 0).run();
+    }
 
     // 5. Log Payment
-    await supabase.from('payments').insert({
-      order_id: order.id,
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      amount: total,
-      status: 'captured',
-    });
+    await db.prepare(`
+      INSERT INTO payments (order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, status)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(order.id, razorpay_order_id, razorpay_payment_id, razorpay_signature, total, 'captured').run();
 
     return NextResponse.json({ success: true, orderId: order.id });
   } catch (error) {

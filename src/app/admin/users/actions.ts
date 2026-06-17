@@ -1,19 +1,17 @@
 'use server';
 
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 export async function getUsers() {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
   
-  // Fetch profiles with joined auth.users data via Admin API
-  const { data: users, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return users;
+  try {
+    const { results } = await db.prepare('SELECT * FROM profiles ORDER BY created_at DESC').all<any>();
+    return results;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 }
 
 export async function createUser(formData: FormData) {
@@ -22,43 +20,48 @@ export async function createUser(formData: FormData) {
   const fullName = formData.get('full_name') as string;
   const role = formData.get('role') as string;
 
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
 
-  // Create user in Auth
-  const { error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { full_name: fullName, role }
-  });
-
-  if (authError) throw new Error(authError.message);
+  try {
+    await db.prepare(`
+      INSERT INTO profiles (id, email, password, full_name, role)
+      VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?)
+    `).bind(email, password, fullName, role).run();
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 
   revalidatePath('/admin/users');
   return { success: true };
 }
 
 export async function updateUser(userId: string, data: { full_name?: string; role?: string }) {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
 
-  const { error } = await supabase
-    .from('profiles')
-    .update(data)
-    .eq('id', userId);
-
-  if (error) throw new Error(error.message);
+  try {
+    if (data.full_name && data.role) {
+      await db.prepare('UPDATE profiles SET full_name = ?, role = ? WHERE id = ?').bind(data.full_name, data.role, userId).run();
+    } else if (data.full_name) {
+      await db.prepare('UPDATE profiles SET full_name = ? WHERE id = ?').bind(data.full_name, userId).run();
+    } else if (data.role) {
+      await db.prepare('UPDATE profiles SET role = ? WHERE id = ?').bind(data.role, userId).run();
+    }
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 
   revalidatePath('/admin/users');
   return { success: true };
 }
 
 export async function deleteUser(userId: string) {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
 
-  // Deleting from auth.users will cascade to public.profiles due to FK
-  const { error } = await supabase.auth.admin.deleteUser(userId);
-
-  if (error) throw new Error(error.message);
+  try {
+    await db.prepare('DELETE FROM profiles WHERE id = ?').bind(userId).run();
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 
   revalidatePath('/admin/users');
   return { success: true };

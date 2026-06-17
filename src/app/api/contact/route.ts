@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { contactSchema } from '@/lib/validations/contactSchema';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
+
+export const runtime = 'edge';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as any;
 
     // 1. Validate with Zod
     const parsed = contactSchema.safeParse(body);
@@ -17,23 +19,21 @@ export async function POST(request: Request) {
 
     const { name, email, phone, enquiryType, message, companyName } = parsed.data;
 
-    // 3. Insert into Supabase
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const supabase = createSupabaseAdminClient();
-      const { error: dbError } = await supabase
-        .from('contact_enquiries')
-        .insert({
-          name,
-          email,
-          phone: phone ?? null,
-          company_name: companyName ?? null, // TODO: Add company_name column to Supabase table
-          enquiry_type: enquiryType ?? 'general',
-          message,
-        });
-
-      if (dbError) {
-        console.error('Supabase insert error:', dbError.message);
-      }
+    const db = getDb();
+    try {
+      await db.prepare(`
+        INSERT INTO contact_enquiries (name, email, phone, company_name, enquiry_type, message)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(
+        name,
+        email,
+        phone ?? null,
+        companyName ?? null,
+        enquiryType ?? 'general',
+        message
+      ).run();
+    } catch (dbError: any) {
+      console.error('D1 insert error:', dbError.message);
     }
 
     return NextResponse.json({ success: true });

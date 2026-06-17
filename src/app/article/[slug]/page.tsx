@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -10,13 +10,11 @@ interface Props {
   params: { slug: string };
 }
 
+export const runtime = 'edge';
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createSupabaseAdminClient();
-  const { data: post } = await supabase
-    .from('posts')
-    .select('title, excerpt, image')
-    .eq('slug', params.slug)
-    .single();
+  const db = getDb();
+  const post = await db.prepare('SELECT title, excerpt, image FROM posts WHERE slug = ?').bind(params.slug).first<any>();
 
   if (!post) return { title: 'Post Not Found' };
 
@@ -32,45 +30,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export async function generateStaticParams() {
-  const supabase = createSupabaseAdminClient();
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('slug')
-    .eq('is_published', true);
 
-  return (posts || []).map((post) => ({
-    slug: post.slug,
-  }));
-}
 
 export default async function BlogPostPage({ params }: Props) {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
+  const post = await db.prepare('SELECT * FROM posts WHERE slug = ?').bind(params.slug).first<any>();
 
   if (!post) {
     notFound();
   }
 
   // Fetch recent posts for sidebar
-  const { data: recentPosts } = await supabase
-    .from('posts')
-    .select('id, slug, title, image, published_at')
-    .eq('is_published', true)
-    .neq('slug', params.slug)
-    .order('published_at', { ascending: false })
-    .limit(3);
+  const { results: recentPosts } = await db.prepare(
+    'SELECT id, slug, title, image, published_at FROM posts WHERE is_published = 1 AND slug != ? ORDER BY published_at DESC LIMIT 3'
+  ).bind(params.slug).all<any>();
 
   // Fetch a related product for the "Ad"
-  const { data: promoProducts } = await supabase
-    .from('products')
-    .select('*')
-    .eq('is_active', true);
+  const { results: promoProducts } = await db.prepare('SELECT * FROM products WHERE is_active = 1').all<any>();
 
   // Determine which product to promote
   let promoProduct = null;
@@ -78,8 +55,8 @@ export default async function BlogPostPage({ params }: Props) {
   if (post.promo_product_slug) {
     // 1. Priority: Specific manual product selection
     promoProduct = promoProducts?.find(p => p.slug === post.promo_product_slug);
-  } 
-  
+  }
+
   if (!promoProduct && post.promo_category_slug) {
     // 2. Priority: Specific category selection
     const categoryProducts = promoProducts?.filter(p => p.category_slug === post.promo_category_slug);
@@ -90,7 +67,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   if (!promoProduct) {
     // 3. Fallback: Automatic keyword matching or random
-    promoProduct = promoProducts?.find(p => 
+    promoProduct = promoProducts?.find(p =>
       p.category.toLowerCase().includes(post.category.toLowerCase()) ||
       post.category.toLowerCase().includes(p.category.toLowerCase())
     ) || (promoProducts ? promoProducts[Math.floor(Math.random() * promoProducts.length)] : null);
@@ -112,12 +89,12 @@ export default async function BlogPostPage({ params }: Props) {
       "name": "FitZone Apparels",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://fitzoneapparel.in/logo.png"
+        "url": "https://fitzoneapparels.com/logo.png"
       }
     },
     "mainEntityOfPage": {
       "@type": "WebPage",
-      "@id": `https://fitzoneapparel.in/blog/${post.slug}`
+      "@id": `https://fitzoneapparels.com/article/${post.slug}`
     }
   };
 
@@ -144,7 +121,7 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
 
           <div className="relative z-10 max-w-screen-xl mx-auto px-4 pb-12 w-full">
-            <Link href="/blog" className="inline-flex items-center text-brand-secondary hover:text-white transition-colors mb-6 font-semibold uppercase text-sm tracking-widest">
+            <Link href="/article" className="inline-flex items-center text-brand-secondary hover:text-white transition-colors mb-6 font-semibold uppercase text-sm tracking-widest">
               <ChevronLeft className="w-4 h-4 mr-2" /> Back to Blog
             </Link>
             <div className="space-y-4 max-w-4xl">
@@ -222,7 +199,7 @@ export default async function BlogPostPage({ params }: Props) {
                   <h4 className="text-lg font-bold text-brand-dark uppercase border-b border-brand-primary pb-2 inline-block">More Insights</h4>
                   <div className="space-y-6">
                     {recentPosts && recentPosts.map(p => (
-                      <Link key={p.id} href={`/blog/${p.slug}`} className="group flex gap-4">
+                      <Link key={p.id} href={`/article/${p.slug}`} className="group flex gap-4">
                         <div className="relative w-20 h-20 flex-shrink-0 rounded-brand overflow-hidden">
                           {p.image && <Image src={p.image} alt={p.title} fill className="object-cover group-hover:scale-110 transition-transform" />}
                         </div>

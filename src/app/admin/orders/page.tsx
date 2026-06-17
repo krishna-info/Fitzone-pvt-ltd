@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft, ShoppingBag, Clock, User, AlertCircle } from 'lucide-react';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getDb } from '@/lib/db';
 import { OrderActionButtons } from '@/components/admin/OrderActionButtons';
 
 export const metadata: Metadata = {
@@ -10,18 +10,16 @@ export const metadata: Metadata = {
 
 import { Order } from '@/types/admin';
 
+export const runtime = 'edge';
+
 export default async function AdminOrdersPage() {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
 
-  const { data: orders, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      order_items(*)
-    `)
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  let orders = [];
+  try {
+    const { results } = await db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all<any>();
+    orders = results;
+  } catch (error: any) {
     console.error('Error fetching orders:', error.message);
   }
 

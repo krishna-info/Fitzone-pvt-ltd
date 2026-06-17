@@ -20,7 +20,7 @@ export function ProductListWithPagination({ initialProducts, categorySlug }: Pro
     setLoading(true);
     try {
       const response = await fetch(`/api/products?category=${categorySlug}&limit=12&offset=${offset}`);
-      const newProducts = await response.json();
+      const newProducts = (await response.json()) as any;
       
       if (newProducts.length < 12) {
         setHasMore(false);

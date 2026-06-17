@@ -22,7 +22,7 @@ scenarios:
           url: "/products"
       - think: 1
       - get:
-          url: "/blog"
+          url: "/article"
       - think: 1
       - get:
           url: "/manufacturing"

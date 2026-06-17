@@ -28,8 +28,8 @@ export function BlogGrid({ posts }: { posts: Post[] }) {
           transition={{ delay: index * 0.1 }}
           className="group flex flex-col bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-card hover:shadow-float transition-all"
         >
-          <Link href={`/blog/${post.slug}`} className="relative aspect-[16/10] overflow-hidden">
-            <Image 
+          <Link href={`/article/${post.slug}`} className="relative aspect-[16/10] overflow-hidden">
+            <Image
               src={post.image || 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1200'}
               alt={post.title}
               fill
@@ -40,26 +40,26 @@ export function BlogGrid({ posts }: { posts: Post[] }) {
               {post.category}
             </div>
           </Link>
-          
+
           <div className="p-8 flex flex-col flex-grow space-y-4">
             <div className="flex items-center text-[11px] font-bold text-brand-muted uppercase tracking-wider space-x-6">
               <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-brand-primary" /> {new Date(post.published_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5 text-brand-primary" /> {post.author_name}</span>
             </div>
-            
-            <Link href={`/blog/${post.slug}`}>
+
+            <Link href={`/article/${post.slug}`}>
               <h2 className="text-xl font-black text-brand-dark group-hover:text-brand-primary transition-colors line-clamp-2 leading-tight">
                 {post.title}
               </h2>
             </Link>
-            
+
             <p className="text-brand-muted text-sm line-clamp-3 leading-relaxed">
               {post.excerpt}
             </p>
-            
+
             <div className="pt-6 mt-auto">
-              <Link href={`/blog/${post.slug}`} className="inline-flex items-center text-brand-primary font-black text-[11px] uppercase tracking-widest group/link">
-                Read Full Insight 
+              <Link href={`/article/${post.slug}`} className="inline-flex items-center text-brand-primary font-black text-[11px] uppercase tracking-widest group/link">
+                Read Full Insight
                 <div className="ml-2 w-8 h-8 rounded-full bg-brand-primary/10 flex items-center justify-center group-hover/link:bg-brand-primary group-hover/link:text-white transition-all">
                   <ArrowRight className="w-4 h-4" />
                 </div>

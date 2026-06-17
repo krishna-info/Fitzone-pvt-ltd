@@ -1,21 +1,34 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft, CreditCard, Clock, CheckCircle2, XCircle, AlertCircle, ExternalLink, Search, Filter } from 'lucide-react';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getDb } from '@/lib/db';
 
 export const metadata: Metadata = {
   title: 'Payments | FitZone Admin',
 };
 
+export const runtime = 'edge';
+
 export default async function PaymentsPage() {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
 
-  const { data: payments, error } = await supabase
-    .from('payments')
-    .select('*, orders(*)')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  let payments = [];
+  try {
+    const { results } = await db.prepare(`
+      SELECT p.*, o.customer_name as order_customer_name, o.customer_email as order_customer_email
+      FROM payments p
+      LEFT JOIN orders o ON p.order_id = o.id
+      ORDER BY p.created_at DESC
+    `).all<any>();
+    
+    payments = results.map((p: any) => ({
+      ...p,
+      orders: {
+        customer_name: p.order_customer_name,
+        customer_email: p.order_customer_email
+      }
+    }));
+  } catch (error: any) {
     console.error('Error fetching payments:', error.message);
   }
 

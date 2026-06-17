@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
 import { BlogGrid } from '@/components/blog/BlogGrid';
 import { Button } from '@/components/ui/Button';
 
@@ -13,14 +13,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const runtime = 'edge';
+
 export default async function BlogListingPage() {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
   
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('is_published', true)
-    .order('published_at', { ascending: false });
+  const { results: posts } = await db.prepare(
+    'SELECT * FROM posts WHERE is_published = 1 ORDER BY published_at DESC'
+  ).all<any>();
 
   return (
     <main className="bg-brand-surface min-h-screen">

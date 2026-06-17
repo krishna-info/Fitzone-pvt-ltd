@@ -37,7 +37,7 @@ export function ContactForm() {
         setSuccess(true);
         reset();
       } else {
-        const errData = await response.json();
+        const errData = (await response.json()) as any;
         alert(errData.message || 'Something went wrong. Please try again.');
       }
     } catch {

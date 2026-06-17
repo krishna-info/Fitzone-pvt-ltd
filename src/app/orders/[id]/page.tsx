@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft, ShoppingBag, Clock, Package, CheckCircle2, AlertCircle, MessageSquare, CreditCard } from 'lucide-react';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getDb } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { ReturnRequestModal } from '@/components/orders/ReturnRequestModal';
@@ -10,18 +10,31 @@ export const metadata: Metadata = {
   title: 'Order Status | FitZone Apparels',
 };
 
+export const runtime = 'edge';
+
 export default async function OrderLookupPage({ params }: { params: { id: string } }) {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
 
-  const { data: order, error } = await supabase
-    .from('orders')
-    .select('*, order_items(*, products(name, images))')
-    .eq('id', params.id)
-    .single();
+  const order = await db.prepare('SELECT * FROM orders WHERE id = ?').bind(params.id).first<any>();
 
-  if (error || !order) {
+  if (!order) {
     notFound();
   }
+
+  const { results: items } = await db.prepare(`
+    SELECT oi.*, p.name as product_name, p.images as product_images 
+    FROM order_items oi 
+    JOIN products p ON oi.product_id = p.id 
+    WHERE oi.order_id = ?
+  `).bind(params.id).all<any>();
+
+  order.order_items = items.map((item: any) => ({
+    ...item,
+    products: {
+      name: item.product_name,
+      images: typeof item.product_images === 'string' ? JSON.parse(item.product_images) : (item.product_images || [])
+    }
+  }));
 
   const isRefundable = order.status === 'delivered' && 
                        (!order.return_status || order.return_status === 'none');

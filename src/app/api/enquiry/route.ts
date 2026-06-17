@@ -1,30 +1,30 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
+
+export const runtime = 'edge';
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as any;
     const { items, enquiry_type = 'bulk_order' } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
     }
 
-    // Insert into Supabase contact_enquiries table
-    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      const supabase = createSupabaseAdminClient();
-      const { error: dbError } = await supabase
-        .from('contact_enquiries')
-        .insert({
-          name: 'Bulk Enquiry (Cart)',
-          email: 'via-whatsapp@fitzone.in',
-          enquiry_type,
-          message: JSON.stringify(items),
-        });
-
-      if (dbError) {
-        console.error('Supabase enquiry insert error:', dbError.message);
-      }
+    const db = getDb();
+    try {
+      await db.prepare(`
+        INSERT INTO contact_enquiries (name, email, enquiry_type, message)
+        VALUES (?, ?, ?, ?)
+      `).bind(
+        'Bulk Enquiry (Cart)',
+        'via-whatsapp@fitzoneapparels.com',
+        enquiry_type,
+        JSON.stringify(items)
+      ).run();
+    } catch (dbError: any) {
+      console.error('D1 enquiry insert error:', dbError.message);
     }
 
     return NextResponse.json({ success: true });

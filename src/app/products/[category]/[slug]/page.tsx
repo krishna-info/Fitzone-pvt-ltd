@@ -7,10 +7,7 @@ interface Props {
   params: { category: string; slug: string };
 }
 
-export async function generateStaticParams() {
-  const products = await getAllProducts();
-  return products.map(p => ({ category: p.category_slug, slug: p.slug }));
-}
+export const runtime = 'edge';
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProductBySlug(params.slug);

@@ -1,22 +1,34 @@
 'use server';
 
-import { createSupabaseServerClient } from '@/lib/supabase-server';
 import { redirect } from 'next/navigation';
+import { getDb } from '@/lib/db';
+import { createToken } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function login(formData: FormData) {
   try {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const supabase = createSupabaseServerClient();
+    const db = getDb();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { error: error.message };
+    // For migration: checking against a profiles table that should contain the email & password
+    // Alternatively, verify against an admin env var for fallback
+    const user = await db.prepare('SELECT * FROM profiles WHERE email = ? AND role = ?').bind(email, 'admin').first<any>();
+    
+    if (!user || user.password !== password) {
+      // Fallback check against env var if DB fails
+      if (email !== process.env.ADMIN_EMAIL || password !== process.env.ADMIN_PASSWORD) {
+        return { error: 'Invalid login credentials' };
+      }
     }
+
+    const token = await createToken({ userId: user?.id || 'admin-1', role: 'admin' });
+    cookies().set('auth_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 // 1 day
+    });
   } catch (err) {
     console.error('Login error:', err);
     return { error: 'A network error occurred. Please try again later.' };
@@ -27,7 +39,6 @@ export async function login(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = createSupabaseServerClient();
-  await supabase.auth.signOut();
+  cookies().delete('auth_token');
   redirect('/admin/login');
 }

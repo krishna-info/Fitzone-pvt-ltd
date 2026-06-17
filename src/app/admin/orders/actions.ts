@@ -1,22 +1,19 @@
 'use server';
 
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getDb } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 export async function requestReturn(orderId: string, reason: string, upiId?: string) {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
   
-  const { error } = await supabase
-    .from('orders')
-    .update({
-      return_status: 'requested',
-      return_reason: reason,
-      refund_upi_id: upiId || null,
-      return_requested_at: new Date().toISOString(),
-    })
-    .eq('id', orderId);
-
-  if (error) throw new Error(error.message);
+  try {
+    await db.prepare(`
+      UPDATE orders SET return_status = ?, return_reason = ?, refund_upi_id = ?, return_requested_at = ?
+      WHERE id = ?
+    `).bind('requested', reason, upiId || null, new Date().toISOString(), orderId).run();
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
   
   revalidatePath(`/orders/${orderId}`);
   revalidatePath('/admin/orders');
@@ -24,14 +21,13 @@ export async function requestReturn(orderId: string, reason: string, upiId?: str
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
   
-  const { error } = await supabase
-    .from('orders')
-    .update({ status })
-    .eq('id', orderId);
-
-  if (error) throw new Error(error.message);
+  try {
+    await db.prepare('UPDATE orders SET status = ? WHERE id = ?').bind(status, orderId).run();
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
   
   revalidatePath(`/orders/${orderId}`);
   revalidatePath('/admin/orders');
@@ -39,22 +35,19 @@ export async function updateOrderStatus(orderId: string, status: string) {
 }
 
 export async function updateReturnStatus(orderId: string, returnStatus: string) {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
   
-  const updateData: { return_status: string; refund_processed_at?: string } = { 
-    return_status: returnStatus 
-  };
-  
-  if (returnStatus === 'refunded') {
-    updateData.refund_processed_at = new Date().toISOString();
+  try {
+    if (returnStatus === 'refunded') {
+      await db.prepare('UPDATE orders SET return_status = ?, refund_processed_at = ? WHERE id = ?')
+        .bind(returnStatus, new Date().toISOString(), orderId).run();
+    } else {
+      await db.prepare('UPDATE orders SET return_status = ? WHERE id = ?')
+        .bind(returnStatus, orderId).run();
+    }
+  } catch (error: any) {
+    throw new Error(error.message);
   }
-
-  const { error } = await supabase
-    .from('orders')
-    .update(updateData)
-    .eq('id', orderId);
-
-  if (error) throw new Error(error.message);
   
   revalidatePath(`/orders/${orderId}`);
   revalidatePath('/admin/orders');

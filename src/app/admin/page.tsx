@@ -2,32 +2,32 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { FileText, CreditCard, Package, ShoppingBag, MessageCircle, Users, LayoutDashboard, LogOut, ChevronRight } from 'lucide-react';
 import { signOut } from './actions';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
 
 export const metadata: Metadata = {
   title: 'Admin Dashboard | FitZone Apparels',
   robots: { index: false, follow: false },
 };
 
+export const runtime = 'edge';
+
 export default async function AdminDashboard() {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
 
   // Fetch counts and stats
-  const [
-    { count: enquiriesCount },
-    { count: productsCount },
-    { data: paymentsData },
-    { count: newEnquiriesCount },
-    { count: postsCount }
-  ] = await Promise.all([
-    supabase.from('contact_enquiries').select('*', { count: 'exact', head: true }),
-    supabase.from('products').select('*', { count: 'exact', head: true }),
-    supabase.from('payments').select('amount').eq('status', 'captured'),
-    supabase.from('contact_enquiries')
-      .select('*', { count: 'exact', head: true })
-      .gt('submitted_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-    supabase.from('posts').select('*', { count: 'exact', head: true })
+  const queries = await Promise.all([
+    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries').first<{count: number}>(),
+    db.prepare('SELECT COUNT(*) as count FROM products').first<{count: number}>(),
+    db.prepare('SELECT amount FROM payments WHERE status = ?').bind('captured').all<{amount: number}>(),
+    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries WHERE created_at > ?').bind(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).first<{count: number}>(),
+    db.prepare('SELECT COUNT(*) as count FROM posts').first<{count: number}>()
   ]);
+
+  const enquiriesCount = queries[0]?.count || 0;
+  const productsCount = queries[1]?.count || 0;
+  const paymentsData = queries[2]?.results || [];
+  const newEnquiriesCount = queries[3]?.count || 0;
+  const postsCount = queries[4]?.count || 0;
 
   const totalPayments = (paymentsData || []).reduce((acc, curr) => acc + (curr.amount / 100), 0);
 

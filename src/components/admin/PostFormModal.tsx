@@ -6,8 +6,8 @@ import { upsertPost } from '@/app/admin/blog-actions';
 import { Modal } from '@/components/ui/Modal';
 import { Edit, Plus } from 'lucide-react';
 
-import { supabase } from '@/lib/supabase';
 import { PRODUCT_CATEGORIES, Product as ProductType } from '@/lib/product-types';
+import { getAvailableProducts } from '@/app/admin/blog-actions';
 
 interface Post {
   id?: string;
@@ -38,11 +38,7 @@ export function PostFormModal({ post }: PostFormProps) {
   React.useEffect(() => {
     if (open) {
       const fetchProducts = async () => {
-        const { data } = await supabase
-          .from('products')
-          .select('slug, name, category')
-          .eq('is_active', true)
-          .order('name');
+        const data = await getAvailableProducts();
         if (data) setAvailableProducts(data);
       };
       fetchProducts();

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Package, Search } from 'lucide-react';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getDb } from '@/lib/db';
 import { ProductFormModal } from '@/components/admin/ProductFormModal';
 import { DeleteProductButton } from '@/components/admin/DeleteProductButton';
 
@@ -10,15 +10,21 @@ export const metadata: Metadata = {
   title: 'Products | FitZone Admin',
 };
 
+export const runtime = 'edge';
+
 export default async function ProductsManagementPage() {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
 
-  const { data: products, error } = await supabase
-    .from('products')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  let products = [];
+  try {
+    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC').all<any>();
+    products = results;
+    // Map stringified JSON arrays back to array object for the UI
+    products = products.map((p: any) => ({
+      ...p,
+      images: typeof p.images === 'string' ? JSON.parse(p.images) : (p.images || [])
+    }));
+  } catch (error: any) {
     console.error('Error fetching products:', error.message);
   }
 

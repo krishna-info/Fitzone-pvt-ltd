@@ -53,7 +53,7 @@ export function CheckoutClient() {
         body: JSON.stringify({ amount: total }),
       });
       
-      const order = await res.json();
+      const order = (await res.json()) as any;
       
       if (!order.id) throw new Error('Failed to create order');
 

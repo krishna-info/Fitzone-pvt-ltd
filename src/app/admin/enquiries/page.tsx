@@ -1,21 +1,22 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronLeft, Mail, Phone, MessageSquare, Clock, Filter, Search } from 'lucide-react';
-import { createSupabaseServerClient } from '@/lib/supabase-server';
+import { getDb } from '@/lib/db';
 
 export const metadata: Metadata = {
   title: 'Enquiries | FitZone Admin',
 };
 
+export const runtime = 'edge';
+
 export default async function EnquiriesPage() {
-  const supabase = createSupabaseServerClient();
+  const db = getDb();
 
-  const { data: enquiries, error } = await supabase
-    .from('contact_enquiries')
-    .select('*')
-    .order('submitted_at', { ascending: false });
-
-  if (error) {
+  let enquiries = [];
+  try {
+    const { results } = await db.prepare('SELECT * FROM contact_enquiries ORDER BY submitted_at DESC').all<any>();
+    enquiries = results;
+  } catch (error: any) {
     console.error('Error fetching enquiries:', error.message);
   }
 

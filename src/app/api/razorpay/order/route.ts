@@ -3,7 +3,7 @@ import { getRazorpay } from '@/lib/razorpay';
 
 export async function POST(req: Request) {
   try {
-    const { amount } = await req.json();
+    const { amount } = (await req.json()) as any;
     const razorpay = getRazorpay();
 
     const options = {

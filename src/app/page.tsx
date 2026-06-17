@@ -4,19 +4,18 @@ import { AboutSnapshot } from '@/components/sections/AboutSnapshot';
 import { ManufacturingProcess } from '@/components/sections/ManufacturingProcess';
 import { GalleryPreview } from '@/components/sections/GalleryPreview';
 import { LatestInsightsSection } from '@/components/sections/LatestInsightsSection';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { getDb } from '@/lib/db';
 import { getLatestProducts } from '@/lib/products';
 import Link from 'next/link';
 
+export const runtime = 'edge';
+
 export default async function Home() {
-  const supabase = createSupabaseAdminClient();
+  const db = getDb();
   
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('id, slug, title, excerpt, image, category')
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
-    .limit(3);
+  const { results: posts } = await db.prepare(
+    'SELECT id, slug, title, excerpt, image, category FROM posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 3'
+  ).all<any>();
 
   const latestProducts = await getLatestProducts(5);
 

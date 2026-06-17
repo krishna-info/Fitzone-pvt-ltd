@@ -19,7 +19,7 @@ export function ProductListPaginated({ initialProducts, category }: ProductListP
     setLoading(true);
     try {
       const response = await fetch(`/api/products?category=${category}&offset=${products.length}&limit=12`);
-      const newProducts = await response.json();
+      const newProducts = (await response.json()) as any;
       
       if (newProducts.length < 12) {
         setHasMore(false);

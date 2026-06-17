@@ -1,14 +1,21 @@
 import { NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
-import crypto from 'crypto';
+import { getDb } from '@/lib/db';
+
+export const runtime = 'edge';
 
 // Razorpay sends a signature we must verify with our secret
-function verifyWebhookSignature(body: string, signature: string, secret: string): boolean {
-  const expected = crypto
-    .createHmac('sha256', secret)
-    .update(body)
-    .digest('hex');
-  return expected === signature;
+async function verifyWebhookSignature(body: string, signature: string, secret: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signatureBuffer = await crypto.subtle.sign('HMAC', key, enc.encode(body));
+  const hashArray = Array.from(new Uint8Array(signatureBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('') === signature;
 }
 
 export async function POST(request: Request) {
@@ -18,7 +25,7 @@ export async function POST(request: Request) {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET ?? '';
 
     // Verify signature if secret is set
-    if (webhookSecret && !verifyWebhookSignature(rawBody, signature, webhookSecret)) {
+    if (webhookSecret && !(await verifyWebhookSignature(rawBody, signature, webhookSecret))) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
@@ -27,16 +34,19 @@ export async function POST(request: Request) {
 
     if (eventType === 'payment.captured' || eventType === 'payment.failed') {
       const payment = payload?.payment?.entity;
-      if (payment && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const supabase = createSupabaseAdminClient();
-        await supabase.from('payments').insert({
-          razorpay_order_id: payment.order_id,
-          razorpay_payment_id: payment.id,
-          amount: payment.amount,
-          currency: payment.currency,
-          status: eventType === 'payment.captured' ? 'captured' : 'failed',
-          reference: payment.description ?? null,
-        });
+      if (payment) {
+        const db = getDb();
+        await db.prepare(`
+          INSERT INTO payments (razorpay_order_id, razorpay_payment_id, amount, currency, status, reference)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(
+          payment.order_id,
+          payment.id,
+          payment.amount,
+          payment.currency,
+          eventType === 'payment.captured' ? 'captured' : 'failed',
+          payment.description ?? null
+        ).run();
       }
     }
 
