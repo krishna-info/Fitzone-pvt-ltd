@@ -1,9 +1,9 @@
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export const getDb = () => {
-  return getRequestContext().env.DB;
+  return getCloudflareContext().env.DB;
 };
 
 export const getBucket = () => {
-  return getRequestContext().env.BUCKET;
+  return getCloudflareContext().env.BUCKET;
 };
