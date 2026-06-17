@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
 
     // For migration: checking against a profiles table that should contain the email & password
     // Alternatively, verify against an admin env var for fallback
-    const user = await db.prepare('SELECT * FROM profiles WHERE email = ? AND role = ?').bind(email, 'admin').first<any>();
+    const user = (await db.prepare('SELECT * FROM profiles WHERE email = ? AND role = ?').bind(email, 'admin').first()) as any;
     
     if (!user || user.password !== password) {
       // Fallback check against env var if DB fails
