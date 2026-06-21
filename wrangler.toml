@@ -1,6 +1,6 @@
 name = "fitzone-web"
 main = ".open-next/worker.js"
-compatibility_date = "2024-03-20"
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
 [assets]
