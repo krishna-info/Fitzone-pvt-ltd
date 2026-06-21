@@ -62,7 +62,7 @@ export async function deletePost(id: string) {
 export async function getAvailableProducts() {
   const db = getDb();
   try {
-    const { results } = await db.prepare('SELECT slug, name, category FROM products WHERE is_active = 1 ORDER BY name').all<any>();
+    const { results } = await db.prepare('SELECT slug, name, category FROM products WHERE is_active = 1 ORDER BY name').all();
     return results;
   } catch (error) {
     console.error('Error fetching available products:', error);

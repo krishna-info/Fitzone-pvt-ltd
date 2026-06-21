@@ -7,7 +7,7 @@ export async function getUsers() {
   const db = getDb();
   
   try {
-    const { results } = await db.prepare('SELECT * FROM profiles ORDER BY created_at DESC').all<any>();
+    const { results } = await db.prepare('SELECT * FROM profiles ORDER BY created_at DESC').all();
     return results;
   } catch (error: any) {
     throw new Error(error.message);

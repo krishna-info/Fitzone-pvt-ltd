@@ -13,7 +13,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const db = getDb();
-  const post = await db.prepare('SELECT title, excerpt, image FROM posts WHERE slug = ?').bind(params.slug).first<any>();
+  const post = await db.prepare('SELECT title, excerpt, image FROM posts WHERE slug = ?').bind(params.slug).first();
 
   if (!post) return { title: 'Post Not Found' };
 
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BlogPostPage({ params }: Props) {
   const db = getDb();
 
-  const post = await db.prepare('SELECT * FROM posts WHERE slug = ?').bind(params.slug).first<any>();
+  const post = await db.prepare('SELECT * FROM posts WHERE slug = ?').bind(params.slug).first();
 
   if (!post) {
     notFound();
@@ -43,22 +43,22 @@ export default async function BlogPostPage({ params }: Props) {
   // Fetch recent posts for sidebar
   const { results: recentPosts } = await db.prepare(
     'SELECT id, slug, title, image, published_at FROM posts WHERE is_published = 1 AND slug != ? ORDER BY published_at DESC LIMIT 3'
-  ).bind(params.slug).all<any>();
+  ).bind(params.slug).all();
 
   // Fetch a related product for the "Ad"
-  const { results: promoProducts } = await db.prepare('SELECT * FROM products WHERE is_active = 1').all<any>();
+  const { results: promoProducts } = await db.prepare('SELECT * FROM products WHERE is_active = 1').all();
 
   // Determine which product to promote
   let promoProduct = null;
 
   if (post.promo_product_slug) {
     // 1. Priority: Specific manual product selection
-    promoProduct = promoProducts?.find(p => p.slug === post.promo_product_slug);
+    promoProduct = promoProducts?.find((p: any) => (p as any).slug === post.promo_product_slug);
   }
 
   if (!promoProduct && post.promo_category_slug) {
     // 2. Priority: Specific category selection
-    const categoryProducts = promoProducts?.filter(p => p.category_slug === post.promo_category_slug);
+    const categoryProducts = promoProducts?.filter((p: any) => p.category_slug === post.promo_category_slug);
     if (categoryProducts && categoryProducts.length > 0) {
       promoProduct = categoryProducts[Math.floor(Math.random() * categoryProducts.length)];
     }
@@ -66,7 +66,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   if (!promoProduct) {
     // 3. Fallback: Automatic keyword matching or random
-    promoProduct = promoProducts?.find(p =>
+    promoProduct = promoProducts?.find((p: any) =>
       p.category.toLowerCase().includes(post.category.toLowerCase()) ||
       post.category.toLowerCase().includes(p.category.toLowerCase())
     ) || (promoProducts ? promoProducts[Math.floor(Math.random() * promoProducts.length)] : null);
@@ -197,7 +197,7 @@ export default async function BlogPostPage({ params }: Props) {
                 <div className="space-y-6">
                   <h4 className="text-lg font-bold text-brand-dark uppercase border-b border-brand-primary pb-2 inline-block">More Insights</h4>
                   <div className="space-y-6">
-                    {recentPosts && recentPosts.map(p => (
+                    {recentPosts && recentPosts.map((p: any) => (
                       <Link key={p.id} href={`/article/${p.slug}`} className="group flex gap-4">
                         <div className="relative w-20 h-20 flex-shrink-0 rounded-brand overflow-hidden">
                           {p.image && <Image src={p.image} alt={p.title} fill className="object-cover group-hover:scale-110 transition-transform" />}

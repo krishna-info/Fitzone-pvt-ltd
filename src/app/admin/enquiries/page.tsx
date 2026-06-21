@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 export default async function EnquiriesPage() {
   const db = getDb();
 
-  let enquiries = [];
+  let enquiries: any[] = [];
   try {
-    const { results } = await db.prepare('SELECT * FROM contact_enquiries ORDER BY submitted_at DESC').all<any>();
+    const { results } = await db.prepare('SELECT * FROM contact_enquiries ORDER BY submitted_at DESC').all();
     enquiries = results;
   } catch (error: any) {
     console.error('Error fetching enquiries:', error.message);

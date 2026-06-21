@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function OrderLookupPage({ params }: { params: { id: string } }) {
   const db = getDb();
 
-  const order = await db.prepare('SELECT * FROM orders WHERE id = ?').bind(params.id).first<any>();
+  const order = await db.prepare('SELECT * FROM orders WHERE id = ?').bind(params.id).first();
 
   if (!order) {
     notFound();
@@ -25,7 +25,7 @@ export default async function OrderLookupPage({ params }: { params: { id: string
     FROM order_items oi 
     JOIN products p ON oi.product_id = p.id 
     WHERE oi.order_id = ?
-  `).bind(params.id).all<any>();
+  `).bind(params.id).all();
 
   order.order_items = items.map((item: any) => ({
     ...item,

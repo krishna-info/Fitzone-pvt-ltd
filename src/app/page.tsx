@@ -14,7 +14,7 @@ export default async function Home() {
   
   const { results: posts } = await db.prepare(
     'SELECT id, slug, title, excerpt, image, category FROM posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 3'
-  ).all<any>();
+  ).all();
 
   const latestProducts = await getLatestProducts(5);
 

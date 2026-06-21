@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 export default async function ProductsManagementPage() {
   const db = getDb();
 
-  let products = [];
+  let products: any[] = [];
   try {
-    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC').all<any>();
+    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
     products = results;
     // Map stringified JSON arrays back to array object for the UI
     products = products.map((p: any) => ({

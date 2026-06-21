@@ -11,14 +11,14 @@ export const metadata: Metadata = {
 export default async function PaymentsPage() {
   const db = getDb();
 
-  let payments = [];
+  let payments: any[] = [];
   try {
     const { results } = await db.prepare(`
       SELECT p.*, o.customer_name as order_customer_name, o.customer_email as order_customer_email
       FROM payments p
       LEFT JOIN orders o ON p.order_id = o.id
       ORDER BY p.created_at DESC
-    `).all<any>();
+    `).all();
     
     payments = results.map((p: any) => ({
       ...p,

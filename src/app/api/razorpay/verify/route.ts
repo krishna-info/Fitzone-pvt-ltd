@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       RETURNING *
     `).bind(
       customerDetails.name, customerDetails.email, customerDetails.phone, customerDetails.address, customerDetails.city, customerDetails.pincode, subtotal, shipping, total, 'processing', razorpay_payment_id, razorpay_order_id
-    ).all<any>();
+    ).all();
 
     const order = orderResults[0];
 

@@ -19,7 +19,7 @@ export default async function BlogListingPage() {
   
   const { results: posts } = await db.prepare(
     'SELECT * FROM posts WHERE is_published = 1 ORDER BY published_at DESC'
-  ).all<any>();
+  ).all();
 
   return (
     <main className="bg-brand-surface min-h-screen">

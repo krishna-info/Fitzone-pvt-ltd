@@ -14,9 +14,9 @@ export const metadata: Metadata = {
 export default async function BlogManagementPage() {
   const db = getDb();
 
-  let posts = [];
+  let posts: any[] = [];
   try {
-    const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC').all<any>();
+    const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC').all();
     posts = results;
   } catch (error: any) {
     console.error('Error fetching posts:', error.message);

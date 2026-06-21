@@ -15,11 +15,11 @@ export default async function AdminDashboard() {
 
   // Fetch counts and stats
   const queries = await Promise.all([
-    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries').first<{count: number}>(),
-    db.prepare('SELECT COUNT(*) as count FROM products').first<{count: number}>(),
-    db.prepare('SELECT amount FROM payments WHERE status = ?').bind('captured').all<{amount: number}>(),
-    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries WHERE created_at > ?').bind(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).first<{count: number}>(),
-    db.prepare('SELECT COUNT(*) as count FROM posts').first<{count: number}>()
+    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries').first(),
+    db.prepare('SELECT COUNT(*) as count FROM products').first(),
+    db.prepare('SELECT amount FROM payments WHERE status = ?').bind('captured').all(),
+    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries WHERE created_at > ?').bind(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).first(),
+    db.prepare('SELECT COUNT(*) as count FROM posts').first()
   ]);
 
   const enquiriesCount = queries[0]?.count || 0;
@@ -28,7 +28,7 @@ export default async function AdminDashboard() {
   const newEnquiriesCount = queries[3]?.count || 0;
   const postsCount = queries[4]?.count || 0;
 
-  const totalPayments = (paymentsData || []).reduce((acc, curr) => acc + (curr.amount / 100), 0);
+  const totalPayments = (paymentsData || []).reduce((acc: any, curr: any) => acc + (curr.amount / 100), 0);
 
   const STATS = [
     { label: 'Total Enquiries', value: enquiriesCount || 0, icon: FileText, color: 'text-blue-500' },
