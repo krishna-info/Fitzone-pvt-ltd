@@ -15,11 +15,19 @@ export const metadata: Metadata = {
 
 
 export default async function BlogListingPage() {
-  const db = getDb();
+  let posts: any[] = [];
   
-  const { results: posts } = await db.prepare(
-    'SELECT * FROM posts WHERE is_published = 1 ORDER BY published_at DESC'
-  ).all();
+  try {
+    const db = getDb();
+    if (db) {
+      const { results } = await db.prepare(
+        'SELECT * FROM posts WHERE is_published = 1 ORDER BY published_at DESC'
+      ).all();
+      posts = results || [];
+    }
+  } catch (error) {
+    console.error("Database connection or query failed on Article page:", error);
+  }
 
   return (
     <main className="bg-brand-surface min-h-screen">

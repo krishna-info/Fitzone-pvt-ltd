@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 import { PRODUCT_CATEGORIES } from '@/lib/product-types';
 
 export default function ProductsClient() {
@@ -41,8 +41,8 @@ export default function ProductsClient() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent flex flex-col justify-end p-8 space-y-4">
                    <h3 className="text-2xl font-extrabold text-white tracking-tight uppercase leading-tight">{cat.name}</h3>
-                   <Link href={`/products/${cat.slug}`}>
-                      <Button variant="secondary" className="w-full sm:w-auto">View Products</Button>
+                   <Link href={`/products/${cat.slug}`} className={buttonVariants({ variant: 'secondary', className: 'w-full sm:w-auto' })}>
+                      View Products
                    </Link>
                 </div>
               </motion.div>
@@ -59,11 +59,11 @@ export default function ProductsClient() {
                As a high-capacity manufacturing unit, we specialize in bulk orders, private labeling, and custom designs for sports academies, corporate teams, and retail brands.
             </p>
             <div className="flex justify-center flex-wrap gap-4">
-               <Link href="/contact">
-                  <Button variant="primary" size="lg">Contact for Wholesale</Button>
+               <Link href="/contact" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+                  Contact for Wholesale
                </Link>
-               <Link href="/manufacturing">
-                  <Button variant="outline" size="lg">Our Process</Button>
+               <Link href="/manufacturing" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+                  Our Process
                </Link>
             </div>
          </div>

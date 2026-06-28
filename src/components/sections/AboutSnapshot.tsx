@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -41,11 +41,11 @@ export function AboutSnapshot() {
             </div>
 
             <div className="pt-4 flex flex-wrap gap-4">
-              <Link href="/about">
-                <Button variant="outline" size="lg">Read Our Story</Button>
+              <Link href="/about" className={buttonVariants({ variant: 'outline', size: 'lg' })}>
+                Read Our Story
               </Link>
-              <Link href="/products">
-                <Button variant="primary" size="lg">Shop Products</Button>
+              <Link href="/products" className={buttonVariants({ variant: 'primary', size: 'lg' })}>
+                Shop Products
               </Link>
             </div>
           </motion.div>

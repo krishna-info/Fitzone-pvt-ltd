@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { MessageCircle, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 import Link from 'next/link';
 import { WHATSAPP_NUMBER } from '@/lib/constants';
 
@@ -55,15 +55,16 @@ export function HeroSection() {
               <MessageCircle className="w-5 h-4 mr-2" />
               WhatsApp Us
             </Button>
-            <Link href="/products">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="bg-transparent border-white text-white hover:bg-white hover:text-brand-dark text-base w-full sm:w-auto"
-              >
-                Shop Now
-                <ArrowRight className="w-5 h-4 ml-2" />
-              </Button>
+            <Link 
+              href="/products" 
+              className={buttonVariants({ 
+                variant: 'outline', 
+                size: 'lg', 
+                className: 'bg-transparent border-white text-white hover:bg-white hover:text-brand-dark text-base w-full sm:w-auto' 
+              })}
+            >
+              Shop Now
+              <ArrowRight className="w-5 h-4 ml-2" />
             </Link>
           </motion.div>
         </div>

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonVariants } from '@/components/ui/Button';
 
 interface Post {
   id: string;
@@ -23,8 +23,8 @@ export function LatestInsightsSection({ posts }: { posts: Post[] }) {
             <h2 className="text-3xl md:text-5xl font-extrabold text-brand-dark uppercase">Latest <span className="text-brand-primary">Insights</span></h2>
             <p className="text-brand-muted max-w-xl">Stay updated with the latest trends in athletic wear manufacturing and textile innovation.</p>
           </div>
-          <Link href="/article">
-            <Button variant="outline">View All Posts</Button>
+          <Link href="/article" className={buttonVariants({ variant: 'outline' })}>
+            View All Posts
           </Link>
         </div>
 

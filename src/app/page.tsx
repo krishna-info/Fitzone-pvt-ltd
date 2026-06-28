@@ -10,11 +10,19 @@ import Link from 'next/link';
 
 
 export default async function Home() {
-  const db = getDb();
+  let posts: any[] = [];
   
-  const { results: posts } = await db.prepare(
-    'SELECT id, slug, title, excerpt, image, category FROM posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 3'
-  ).all();
+  try {
+    const db = getDb();
+    if (db) {
+      const { results } = await db.prepare(
+        'SELECT id, slug, title, excerpt, image, category FROM posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT 3'
+      ).all();
+      posts = results || [];
+    }
+  } catch (error) {
+    console.error("Database connection or query failed on Home page:", error);
+  }
 
   const latestProducts = await getLatestProducts(5);
 
