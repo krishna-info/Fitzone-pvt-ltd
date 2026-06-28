@@ -9,12 +9,20 @@ export const metadata: Metadata = {
 };
 
 export default function CertificationsPage() {
-  const certsDir = path.join(process.cwd(), 'src/content/certifications');
-  const filenames = fs.readdirSync(certsDir);
-  const certs = filenames.map(name => {
-    const filePath = path.join(certsDir, name);
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  });
+  let certs: any[] = [];
+  
+  try {
+    const certsDir = path.join(process.cwd(), 'src/content/certifications');
+    if (fs.existsSync(certsDir)) {
+      const filenames = fs.readdirSync(certsDir);
+      certs = filenames.map(name => {
+        const filePath = path.join(certsDir, name);
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      });
+    }
+  } catch (error) {
+    console.error("Failed to load certifications from filesystem:", error);
+  }
 
   return (
     <div className="bg-brand-surface min-h-screen">
