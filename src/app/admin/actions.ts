@@ -9,18 +9,19 @@ export async function login(formData: FormData) {
   try {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    
+
     let user = null;
     try {
       const db = getDb();
       if (db) {
         // For migration: checking against a profiles table that should contain the email & password
         user = (await db.prepare('SELECT * FROM profiles WHERE email = ? AND role = ?').bind(email, 'admin').first()) as any;
+        console.log("user", user);
       }
     } catch (dbError) {
       console.warn('Database query failed or unavailable, falling back to ENV credentials');
     }
-    
+
     if (!user || user.password !== password) {
       // Fallback check against env var if DB fails
       if (email !== process.env.ADMIN_EMAIL || password !== process.env.ADMIN_PASSWORD) {
