@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { getDb } from '@/lib/db';
 import { createToken } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export async function login(formData: FormData) {
   try {
@@ -14,9 +15,13 @@ export async function login(formData: FormData) {
     try {
       const db = getDb();
       if (db) {
-        // For migration: checking against a profiles table that should contain the email & password
-        user = (await db.prepare('SELECT * FROM profiles WHERE email = ? AND role = ?').bind(email, 'admin').first()) as any;
-        console.log("user", user);
+        // Checking against multiple valid admin roles
+        const validAdminRoles = ['admin', 'superadmin', 'manager'];
+        const placeholders = validAdminRoles.map(() => '?').join(',');
+        
+        user = (await db.prepare(`SELECT * FROM profiles WHERE email = ? AND role IN (${placeholders})`)
+          .bind(email, ...validAdminRoles)
+          .first()) as any;
       }
     } catch (dbError) {
       console.warn('Database query failed or unavailable, falling back to ENV credentials');
@@ -24,7 +29,18 @@ export async function login(formData: FormData) {
 
     if (!user || user.password !== password) {
       // Fallback check against env var if DB fails
-      if (email !== process.env.ADMIN_EMAIL || password !== process.env.ADMIN_PASSWORD) {
+      let adminEmail = process.env.ADMIN_EMAIL;
+      let adminPassword = process.env.ADMIN_PASSWORD;
+      
+      try {
+        const env = getCloudflareContext().env as any;
+        if (env?.ADMIN_EMAIL) adminEmail = env.ADMIN_EMAIL;
+        if (env?.ADMIN_PASSWORD) adminPassword = env.ADMIN_PASSWORD;
+      } catch (e) {
+        // Ignore context errors
+      }
+
+      if (email !== adminEmail || password !== adminPassword) {
         return { error: 'Invalid login credentials' };
       }
     }
@@ -36,9 +52,9 @@ export async function login(formData: FormData) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 // 1 day
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Login error:', err);
-    return { error: 'A network error occurred. Please try again later.' };
+    return { error: err.message || 'A network error occurred. Please try again later.' };
   }
 
   // Redirect to admin dashboard

@@ -3,6 +3,11 @@ main = ".open-next/worker.js"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+[vars]
+ADMIN_EMAIL = "amrit@fitzoneapparels.com"
+ADMIN_PASSWORD = "fitzoneadmin123"
+JWT_SECRET = "super-secret-key"
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"

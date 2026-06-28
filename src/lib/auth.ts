@@ -1,8 +1,19 @@
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 const getJwtSecretKey = () => {
-  const secret = process.env.JWT_SECRET;
+  let secret = process.env.JWT_SECRET;
+  
+  // Try to get from Cloudflare context if process.env is missing
+  try {
+    const env = getCloudflareContext().env as any;
+    if (env?.JWT_SECRET) secret = env.JWT_SECRET;
+  } catch (e) {
+    // Ignore context errors
+  }
+
   if (!secret) {
     throw new Error('JWT_SECRET environment variable is not set');
   }
