@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { getDb } from '@/lib/db';
 import { BlogGrid } from '@/components/blog/BlogGrid';
 import { Button } from '@/components/ui/Button';
+import { Pagination } from '@/components/ui/Pagination';
 
 export const metadata: Metadata = {
   title: 'FitZone Insights | Manufacturing & Fitness Trends',
@@ -13,16 +14,28 @@ export const metadata: Metadata = {
   },
 };
 
-
-export default async function BlogListingPage() {
+export default async function BlogListingPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   let posts: any[] = [];
+  let totalPages = 0;
   
+  const page = parseInt(searchParams.page || '1');
+  const limit = 12;
+  const offset = (page - 1) * limit;
+
   try {
     const db = getDb();
     if (db) {
+      const { results: countResults } = await db.prepare('SELECT COUNT(*) as total FROM posts WHERE is_published = 1').all();
+      const total = (countResults[0] as any).total;
+      totalPages = Math.ceil(total / limit);
+
       const { results } = await db.prepare(
-        'SELECT * FROM posts WHERE is_published = 1 ORDER BY published_at DESC'
-      ).all();
+        'SELECT * FROM posts WHERE is_published = 1 ORDER BY published_at DESC LIMIT ? OFFSET ?'
+      ).bind(limit, offset).all();
       posts = results || [];
     }
   } catch (error) {
@@ -53,7 +66,10 @@ export default async function BlogListingPage() {
       <section className="py-24 px-6">
         <div className="max-w-screen-xl mx-auto">
           {posts && posts.length > 0 ? (
-            <BlogGrid posts={posts} />
+            <>
+              <BlogGrid posts={posts} />
+              <Pagination currentPage={page} totalPages={totalPages} basePath="/article" />
+            </>
           ) : (
             <div className="py-20 text-center">
               <h3 className="text-2xl font-black text-brand-dark">No insights published yet.</h3>

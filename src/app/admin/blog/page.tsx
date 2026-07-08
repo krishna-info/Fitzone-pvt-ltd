@@ -5,18 +5,33 @@ import { ChevronLeft, FileText, Search, Calendar, User } from 'lucide-react';
 import { getDb } from '@/lib/db';
 import { PostFormModal } from '@/components/admin/PostFormModal';
 import { DeletePostButton } from '@/components/admin/DeletePostButton';
+import { Pagination } from '@/components/ui/Pagination';
 
 export const metadata: Metadata = {
   title: 'Blog Management | FitZone Admin',
 };
 
-
-export default async function BlogManagementPage() {
+export default async function BlogManagementPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   const db = getDb();
 
+  const page = parseInt(searchParams.page || '1');
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
   let posts: any[] = [];
+  let totalPages = 0;
+  let totalPosts = 0;
+
   try {
-    const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC').all();
+    const { results: countResults } = await db.prepare('SELECT COUNT(*) as total FROM posts').all();
+    totalPosts = (countResults[0] as any).total;
+    totalPages = Math.ceil(totalPosts / limit);
+
+    const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
     posts = results;
   } catch (error: any) {
     console.error('Error fetching posts:', error.message);
@@ -51,7 +66,7 @@ export default async function BlogManagementPage() {
             </div>
             <div className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-brand-dark flex items-center gap-2">
               <FileText className="w-4 h-4 text-brand-primary" />
-              {posts?.length || 0} Articles Total
+              {totalPosts} Articles Total
             </div>
           </div>
 
@@ -116,6 +131,8 @@ export default async function BlogManagementPage() {
                 </div>
               )}
             </div>
+            
+            <Pagination currentPage={page} totalPages={totalPages} basePath="/admin/blog" />
           </div>
         </div>
       </div>

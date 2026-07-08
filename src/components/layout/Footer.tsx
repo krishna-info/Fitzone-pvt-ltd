@@ -142,7 +142,10 @@ export function Footer() {
 
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 space-y-4 md:space-y-0">
           <p>© {currentYear} {LEGAL_NAME}. All rights reserved.</p>
-          <p>Made with ❤️ in India</p>
+          <div className="flex flex-col items-center md:items-end space-y-1">
+            <p>Made with ❤️ in India</p>
+            <p>Developer: Krishna Pal Singh | Contact: <a href="tel:9440874618" className="hover:text-white transition-colors">9440874618</a> for custom website developing</p>
+          </div>
         </div>
       </div>
     </footer>

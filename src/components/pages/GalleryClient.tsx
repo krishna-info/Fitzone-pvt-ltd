@@ -3,26 +3,22 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import type { GalleryImage } from '@/lib/db';
 
-const CATEGORIES = ['All', 'Manufacturing', 'Products', 'Facility'];
+const DEFAULT_CATEGORIES = ['All', 'Manufacturing', 'Products', 'Facility'];
 
-const GALLERY_IMAGES = [
-  { id: 1, category: 'Manufacturing', title: 'Stitching Unit', src: 'https://images.unsplash.com/photo-1555529669-26f9d103abdd?q=80&w=2070' },
-  { id: 2, category: 'Products', title: 'Performance Tracksuit', src: 'https://images.unsplash.com/photo-1483721310020-03333e577078?q=80&w=1920' },
-  { id: 3, category: 'Facility', title: 'Rajasthan Warehouse', src: 'https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2070' },
-  { id: 4, category: 'Manufacturing', title: 'Fabric Cutting', src: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=2072' },
-  { id: 5, category: 'Products', title: 'Compression Shirt', src: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070' },
-  { id: 6, category: 'Manufacturing', title: 'Quality Check', src: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070' },
-];
-
-
-export default function GalleryClient() {
+export default function GalleryClient({ images }: { images: GalleryImage[] }) {
   const [filter, setFilter] = useState('All');
-  const [selectedImage, setSelectedImage] = useState<typeof GALLERY_IMAGES[0] | null>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
+
+  // Extract unique categories from db + defaults
+  const categoriesSet = new Set(['All']);
+  images.forEach(img => categoriesSet.add(img.category));
+  const CATEGORIES = Array.from(categoriesSet);
 
   const filteredImages = filter === 'All' 
-    ? GALLERY_IMAGES 
-    : GALLERY_IMAGES.filter(img => img.category === filter);
+    ? images 
+    : images.filter(img => img.category === filter);
 
   return (
     <div className="bg-white min-h-screen">
@@ -76,7 +72,7 @@ export default function GalleryClient() {
                     onClick={() => setSelectedImage(img)}
                   >
                     <Image 
-                      src={`${img.src}&auto=format&fit=crop&w=600`}
+                      src={img.image_url}
                       alt={img.title}
                       width={600}
                       height={800}
@@ -119,7 +115,7 @@ export default function GalleryClient() {
               </button>
               <div className="aspect-video relative">
                  <Image 
-                    src={`${selectedImage.src}&auto=format&fit=contain&w=1200`}
+                    src={selectedImage.image_url}
                     alt={selectedImage.title}
                     fill
                     className="object-contain"

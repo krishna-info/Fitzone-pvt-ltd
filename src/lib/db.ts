@@ -10,3 +10,11 @@ export const getBucket = () => {
   unstable_noStore();
   return getCloudflareContext().env.BUCKET;
 };
+
+export interface GalleryImage {
+  id: string;
+  title: string;
+  category: string;
+  image_url: string;
+  created_at: string;
+}

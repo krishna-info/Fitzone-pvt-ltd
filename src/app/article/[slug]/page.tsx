@@ -26,6 +26,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [post.image],
       type: 'article',
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      images: [post.image],
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+      },
+    },
   };
 }
 

@@ -25,32 +25,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
       if (isEdit) {
         await updateProduct(formData);
       } else {
-        const name = formData.get('name') as string;
-        const slug = formData.get('slug') as string;
-        const category_slug = formData.get('category_slug') as string;
-        const price_inr = parseInt(formData.get('price_inr') as string);
-        const moq = parseInt(formData.get('moq') as string) || 1;
-        const description = formData.get('description') as string;
-        const is_active = formData.get('is_active') === 'true';
-        const images_list = formData.get('images_list') as string;
-        const images = images_list ? images_list.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-        const categoryName = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
-
-        await createProduct({
-          name,
-          slug,
-          category_slug,
-          price_inr,
-          moq,
-          images,
-          description,
-          is_active,
-          category: categoryName,
-          is_enquiry_only: false,
-          features: [],
-          specifications: {}
-        });
+        await createProduct(formData);
       }
       setOpen(false);
     } catch (err) {
@@ -151,15 +126,26 @@ export function ProductFormModal({ product }: ProductFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Image URLs (comma separated)</label>
-          <textarea 
-            name="images_list" 
-            rows={2} 
-            required
-            placeholder="https://url1.com, https://url2.com"
-            defaultValue={product?.images.join(', ')} 
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Upload Images</label>
+          <input 
+            type="file"
+            name="images" 
+            multiple
+            accept="image/*"
+            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
           />
+          {isEdit && (
+            <div className="mt-2 text-xs text-gray-500">
+              Uploading new images will append to the existing ones. <br/>
+              Current images (comma separated):
+              <textarea 
+                name="existing_images" 
+                rows={2} 
+                defaultValue={product?.images.join(', ')} 
+                className="mt-1 w-full px-2 py-1 rounded border border-gray-200 text-xs resize-none"
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">

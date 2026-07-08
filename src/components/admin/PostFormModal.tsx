@@ -6,9 +6,6 @@ import { upsertPost } from '@/app/admin/blog-actions';
 import { Modal } from '@/components/ui/Modal';
 import { Edit, Plus } from 'lucide-react';
 
-import { PRODUCT_CATEGORIES, Product as ProductType } from '@/lib/product-types';
-import { getAvailableProducts } from '@/app/admin/blog-actions';
-
 interface Post {
   id?: string;
   title?: string;
@@ -18,10 +15,10 @@ interface Post {
   excerpt?: string;
   content?: string;
   is_published?: boolean;
+  published_at?: string;
   author_name?: string;
   author_role?: string;
-  promo_product_slug?: string;
-  promo_category_slug?: string;
+  author_avatar?: string;
 }
 
 interface PostFormProps {
@@ -31,40 +28,15 @@ interface PostFormProps {
 export function PostFormModal({ post }: PostFormProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [availableProducts, setAvailableProducts] = useState<Pick<ProductType, 'slug' | 'name' | 'category'>[]>([]);
   const isEdit = !!post;
-
-  // Fetch products for promotion dropdown
-  React.useEffect(() => {
-    if (open) {
-      const fetchProducts = async () => {
-        const data = await getAvailableProducts();
-        if (data) setAvailableProducts(data);
-      };
-      fetchProducts();
-    }
-  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
-    const data = Object.fromEntries(formData.entries());
     
-    // Auto-generate slug from title if missing
-    if (!data.slug && data.title) {
-      data.slug = (data.title as string)
-        .toLowerCase()
-        .replace(/ /g, '-')
-        .replace(/[^\w-]+/g, '');
-    }
-
     try {
-      const result = await upsertPost({
-        ...data,
-        id: post?.id || undefined,
-        is_published: data.is_published === 'true',
-      });
+      const result = await upsertPost(formData);
 
       if (result.error) throw new Error(result.error);
       setOpen(false);
@@ -79,8 +51,8 @@ export function PostFormModal({ post }: PostFormProps) {
     <Modal
       open={open}
       onOpenChange={setOpen}
-      title={isEdit ? 'Edit Blog Post' : 'Create Guest Post'}
-      description={isEdit ? `Modifying "${post.title}"` : 'Share insights, trends, or news with the FitZone community.'}
+      title={isEdit ? 'Edit Blog Post' : 'Create Post'}
+      description={isEdit ? `Modifying "${post.title}"` : 'Write a new article for the FitZone blog.'}
       trigger={
         isEdit ? (
           <button className="p-2 bg-gray-50 rounded-lg text-brand-dark hover:bg-brand-secondary transition-colors border border-gray-100">
@@ -88,12 +60,14 @@ export function PostFormModal({ post }: PostFormProps) {
           </button>
         ) : (
           <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-brand-secondary text-brand-dark text-sm font-black hover:scale-105 active:scale-95 transition-all shadow-lg">
-            <Plus className="w-5 h-5" /> Write Guest Post
+            <Plus className="w-5 h-5" /> Write Post
           </button>
         )
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
+        {isEdit && <input type="hidden" name="id" value={post.id} />}
+        
         <div className="space-y-2">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Title</label>
           <input 
@@ -107,6 +81,15 @@ export function PostFormModal({ post }: PostFormProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Slug</label>
+            <input 
+              name="slug" 
+              defaultValue={post?.slug} 
+              placeholder="Auto-generated if left blank"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
+          <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category</label>
             <input 
               name="category" 
@@ -115,6 +98,9 @@ export function PostFormModal({ post }: PostFormProps) {
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Status</label>
             <select 
@@ -126,17 +112,31 @@ export function PostFormModal({ post }: PostFormProps) {
               <option value="false">Draft</option>
             </select>
           </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Published At</label>
+            <input 
+              type="datetime-local"
+              name="published_at" 
+              defaultValue={post?.published_at ? new Date(post.published_at).toISOString().slice(0,16) : ''} 
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Image URL</label>
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Upload Cover Image</label>
           <input 
-            name="image" 
-            required 
-            defaultValue={post?.image} 
-            placeholder="Unsplash URL or hosted image link"
+            type="file"
+            name="image_file" 
+            accept="image/*"
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
           />
+          {post?.image && (
+            <div className="mt-2 text-xs text-gray-500">
+              Current Image URL: {post.image}
+              <input type="hidden" name="existing_image" value={post.image} />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -162,41 +162,6 @@ export function PostFormModal({ post }: PostFormProps) {
         </div>
 
         <div className="pt-4 border-t border-gray-100 mt-6 space-y-4">
-          <h4 className="text-xs font-black text-brand-dark uppercase tracking-[0.2em]">Promotion Settings</h4>
-          <p className="text-[10px] text-brand-muted uppercase font-bold">Specify a product or category to feature in this post.</p>
-          
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Promote Specific Product</label>
-              <select 
-                name="promo_product_slug" 
-                defaultValue={post?.promo_product_slug || ''}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
-              >
-                <option value="">Auto-select (Based on post topic)</option>
-                {availableProducts.map(p => (
-                  <option key={p.slug} value={p.slug}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Promote Category</label>
-              <select 
-                name="promo_category_slug" 
-                defaultValue={post?.promo_category_slug || ''}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
-              >
-                <option value="">None (Use product selection above)</option>
-                {PRODUCT_CATEGORIES.map(cat => (
-                  <option key={cat.slug} value={cat.slug}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-gray-100 mt-6 space-y-4">
           <h4 className="text-xs font-black text-brand-muted uppercase tracking-widest">Author Details</h4>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -216,6 +181,15 @@ export function PostFormModal({ post }: PostFormProps) {
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Author Avatar URL</label>
+            <input 
+              name="author_avatar" 
+              defaultValue={post?.author_avatar || ''} 
+              placeholder="https://..."
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
           </div>
         </div>
 

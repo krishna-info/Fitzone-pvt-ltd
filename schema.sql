@@ -110,3 +110,12 @@ CREATE TABLE IF NOT EXISTS payments (
     reference TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 8. Gallery Images Table
+CREATE TABLE IF NOT EXISTS gallery_images (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    category TEXT NOT NULL,
+    image_url TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

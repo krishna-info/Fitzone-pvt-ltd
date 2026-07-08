@@ -5,18 +5,33 @@ import { ChevronLeft, Package, Search } from 'lucide-react';
 import { getDb } from '@/lib/db';
 import { ProductFormModal } from '@/components/admin/ProductFormModal';
 import { DeleteProductButton } from '@/components/admin/DeleteProductButton';
+import { Pagination } from '@/components/ui/Pagination';
 
 export const metadata: Metadata = {
   title: 'Products | FitZone Admin',
 };
 
-
-export default async function ProductsManagementPage() {
+export default async function ProductsManagementPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   const db = getDb();
+  
+  const page = parseInt(searchParams.page || '1');
+  const limit = 12;
+  const offset = (page - 1) * limit;
 
   let products: any[] = [];
+  let totalPages = 0;
+  let totalProducts = 0;
+
   try {
-    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC').all();
+    const { results: countResults } = await db.prepare('SELECT COUNT(*) as total FROM products').all();
+    totalProducts = (countResults[0] as any).total;
+    totalPages = Math.ceil(totalProducts / limit);
+
+    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
     products = results;
     // Map stringified JSON arrays back to array object for the UI
     products = products.map((p: any) => ({
@@ -56,7 +71,7 @@ export default async function ProductsManagementPage() {
             </div>
             <div className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-brand-dark flex items-center gap-2">
               <Package className="w-4 h-4 text-brand-primary" />
-              {products?.length || 0} Products Total
+              {totalProducts} Products Total
             </div>
           </div>
 
@@ -107,6 +122,8 @@ export default async function ProductsManagementPage() {
                 </div>
               )}
             </div>
+            
+            <Pagination currentPage={page} totalPages={totalPages} basePath="/admin/products" />
           </div>
         </div>
       </div>
