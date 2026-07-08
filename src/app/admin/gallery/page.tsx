@@ -11,23 +11,24 @@ export default async function AdminGalleryPage({
   searchParams: { page?: string };
 }) {
   const db = getDb();
-  
+
   // Pagination setup
   const page = Number(searchParams?.page) || 1;
   const limit = 10;
   const offset = (page - 1) * limit;
 
   // Fetch gallery images
-  const { results: images } = await db
+  const { results } = await db
     .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC LIMIT ? OFFSET ?')
     .bind(limit, offset)
-    .all<GalleryImage>();
+    .all();
+  const images = results as unknown as GalleryImage[];
 
   // Get total count for pagination
   const { results: countResult } = await db
     .prepare('SELECT COUNT(*) as total FROM gallery_images')
-    .all<{ total: number }>();
-  
+    .all();
+
   const totalItems = countResult[0]?.total || 0;
   const totalPages = Math.ceil(totalItems / limit);
 
@@ -72,11 +73,14 @@ export default async function AdminGalleryPage({
                     {new Date(img.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <form action={deleteGalleryImage}>
+                    <form action={async (formData) => {
+                      'use server';
+                      await deleteGalleryImage(formData);
+                    }}>
                       <input type="hidden" name="id" value={img.id} />
                       <input type="hidden" name="image_url" value={img.image_url} />
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         className="text-red-600 hover:text-red-900 font-medium"
                       >
                         Delete
@@ -104,11 +108,10 @@ export default async function AdminGalleryPage({
             <a
               key={pageNum}
               href={`/admin/gallery?page=${pageNum}`}
-              className={`px-4 py-2 rounded-md ${
-                page === pageNum
+              className={`px-4 py-2 rounded-md ${page === pageNum
                   ? 'bg-brand-primary text-white'
                   : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-              }`}
+                }`}
             >
               {pageNum}
             </a>

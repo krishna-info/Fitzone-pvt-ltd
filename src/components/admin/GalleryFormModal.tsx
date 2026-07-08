@@ -28,10 +28,12 @@ export function GalleryFormModal() {
   }
 
   return (
-    <>
-      <Button onClick={() => setIsOpen(true)}>Add New Image</Button>
-
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Upload Gallery Image">
+    <Modal 
+      open={isOpen} 
+      onOpenChange={setIsOpen} 
+      title="Upload Gallery Image"
+      trigger={<Button>Add New Image</Button>}
+    >
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
@@ -98,6 +100,5 @@ export function GalleryFormModal() {
           </div>
         </form>
       </Modal>
-    </>
   );
 }
