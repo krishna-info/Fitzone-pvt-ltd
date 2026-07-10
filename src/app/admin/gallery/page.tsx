@@ -10,26 +10,38 @@ export default async function AdminGalleryPage({
 }: {
   searchParams: { page?: string };
 }) {
-  const db = getDb();
+  async function handleDelete(formData: FormData) {
+    "use server";
+    await deleteGalleryImage(formData);
+  }
 
+  const db = getDb();
+  
   // Pagination setup
   const page = Number(searchParams?.page) || 1;
   const limit = 10;
   const offset = (page - 1) * limit;
 
-  // Fetch gallery images
-  const { results } = await db
-    .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC LIMIT ? OFFSET ?')
-    .bind(limit, offset)
-    .all();
-  const images = results as unknown as GalleryImage[];
+  let images: GalleryImage[] = [];
+  let totalItems = 0;
+  
+  try {
+    // Fetch gallery images
+    const { results } = (await db
+      .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC LIMIT ? OFFSET ?')
+      .bind(limit, offset)
+      .all()) as { results: GalleryImage[] };
+    images = results || [];
 
-  // Get total count for pagination
-  const { results: countResult } = await db
-    .prepare('SELECT COUNT(*) as total FROM gallery_images')
-    .all();
+    // Get total count for pagination
+    const { results: countResult } = (await db
+      .prepare('SELECT COUNT(*) as total FROM gallery_images')
+      .all()) as { results: { total: number }[] };
+    totalItems = countResult[0]?.total || 0;
+  } catch (error: any) {
+    console.error('Error fetching gallery images:', error.message);
+  }
 
-  const totalItems = countResult[0]?.total || 0;
   const totalPages = Math.ceil(totalItems / limit);
 
   return (
@@ -73,14 +85,11 @@ export default async function AdminGalleryPage({
                     {new Date(img.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <form action={async (formData) => {
-                      'use server';
-                      await deleteGalleryImage(formData);
-                    }}>
+                    <form action={handleDelete}>
                       <input type="hidden" name="id" value={img.id} />
                       <input type="hidden" name="image_url" value={img.image_url} />
-                      <button
-                        type="submit"
+                      <button 
+                        type="submit" 
                         className="text-red-600 hover:text-red-900 font-medium"
                       >
                         Delete
@@ -108,10 +117,11 @@ export default async function AdminGalleryPage({
             <a
               key={pageNum}
               href={`/admin/gallery?page=${pageNum}`}
-              className={`px-4 py-2 rounded-md ${page === pageNum
+              className={`px-4 py-2 rounded-md ${
+                page === pageNum
                   ? 'bg-brand-primary text-white'
                   : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
-                }`}
+              }`}
             >
               {pageNum}
             </a>

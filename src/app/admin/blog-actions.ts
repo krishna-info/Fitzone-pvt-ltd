@@ -8,56 +8,63 @@ export async function upsertPost(formData: FormData) {
   const db = getDb();
   const bucket = getBucket();
 
-  const id = formData.get('id') as string;
+  const id = (formData.get('id') as string) || crypto.randomUUID();
   const title = formData.get('title') as string;
   let slug = formData.get('slug') as string;
-  const category = formData.get('category') as string;
   const excerpt = formData.get('excerpt') as string;
   const content = formData.get('content') as string;
-  const is_published = formData.get('is_published') === 'true' ? 1 : 0;
+  const category = formData.get('category') as string;
   const author_name = formData.get('author_name') as string;
   const author_role = formData.get('author_role') as string;
   const author_avatar = formData.get('author_avatar') as string;
-  const published_at = formData.get('published_at') as string || null;
-
+  const is_published = formData.get('is_published') === 'true' ? 1 : 0;
+  const published_at = (formData.get('published_at') as string) || new Date().toISOString();
+  
   if (!slug && title) {
     slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
   }
 
-  let image_url = formData.get('existing_image') as string || null;
-  const file = formData.get('image_file') as File;
-
-  if (file && file.size > 0) {
-    try {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
-      const uniqueId = crypto.randomUUID();
-      const key = `articles/${uniqueId}.webp`;
-
-      await bucket.put(key, webpBuffer, {
-        httpMetadata: { contentType: 'image/webp' }
-      });
-      image_url = `/api/images/${key}`;
-    } catch (e) {
-      console.error('Failed to process image', e);
-    }
+  // Handle Image Upload
+  let imageUrl = formData.get('existing_image') as string;
+  const imageFile = formData.get('image') as File;
+  
+  if (imageFile && imageFile.size > 0) {
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
+    const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+    
+    const imageKey = `blog/${crypto.randomUUID()}.webp`;
+    await bucket.put(imageKey, webpBuffer, {
+      httpMetadata: { contentType: 'image/webp' }
+    });
+    imageUrl = `/api/images/${imageKey}`;
   }
 
   try {
-    if (id) {
+    const isUpdate = !!formData.get('id');
+    
+    if (isUpdate) {
       await db.prepare(`
-        UPDATE posts SET title = ?, slug = ?, excerpt = ?, content = ?, image = ?, category = ?, author_name = ?, author_role = ?, author_avatar = ?, is_published = ?, published_at = ?, updated_at = ?
+        UPDATE posts SET 
+          title = ?, slug = ?, excerpt = ?, content = ?, image = ?, 
+          category = ?, author_name = ?, author_role = ?, author_avatar = ?, 
+          is_published = ?, published_at = ?, updated_at = ?
         WHERE id = ?
       `).bind(
-        title, slug, excerpt, content, image_url, category, author_name, author_role, author_avatar, is_published, published_at, new Date().toISOString(), id
+        title, slug, excerpt, content, imageUrl, 
+        category, author_name, author_role, author_avatar, 
+        is_published, published_at, new Date().toISOString(), id
       ).run();
     } else {
-      const newId = crypto.randomUUID();
       await db.prepare(`
-        INSERT INTO posts (id, title, slug, excerpt, content, image, category, author_name, author_role, author_avatar, is_published, published_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO posts (
+          id, title, slug, excerpt, content, image, 
+          category, author_name, author_role, author_avatar, 
+          is_published, published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        newId, title, slug, excerpt, content, image_url, category, author_name, author_role, author_avatar, is_published, published_at
+        id, title, slug, excerpt, content, imageUrl, 
+        category, author_name, author_role, author_avatar, 
+        is_published, published_at
       ).run();
     }
   } catch (error: any) {

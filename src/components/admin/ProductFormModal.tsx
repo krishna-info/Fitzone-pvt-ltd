@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { updateProduct, createProduct } from '@/app/admin/products/actions';
 import { Modal } from '@/components/ui/Modal';
 import { Edit, Plus } from 'lucide-react';
+import Image from 'next/image';
 
 interface ProductFormProps {
   product?: Product;
@@ -14,12 +15,18 @@ interface ProductFormProps {
 export function ProductFormModal({ product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>(product?.images || []);
   const isEdit = !!product;
+
+  const removeImage = (indexToRemove: number) => {
+    setExistingImages(existingImages.filter((_, i) => i !== indexToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     const formData = new FormData(e.currentTarget);
+    formData.append('existing_images', JSON.stringify(existingImages));
     
     try {
       if (isEdit) {
@@ -53,7 +60,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
         )
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
         {isEdit && <input type="hidden" name="id" value={product.id} />}
         
         <div className="grid grid-cols-2 gap-4">
@@ -104,13 +111,16 @@ export function ProductFormModal({ product }: ProductFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category Slug</label>
-            <input 
+            <select 
               name="category_slug" 
               required 
-              placeholder="t-shirts-jerseys"
               defaultValue={product?.category_slug} 
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
-            />
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+            >
+              {PRODUCT_CATEGORIES.map(c => (
+                <option key={c.slug} value={c.slug}>{c.name}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Status</label>
@@ -129,21 +139,27 @@ export function ProductFormModal({ product }: ProductFormProps) {
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Upload Images</label>
           <input 
             type="file"
-            name="images" 
+            name="images"
             multiple
             accept="image/*"
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
           />
-          {isEdit && (
-            <div className="mt-2 text-xs text-gray-500">
-              Uploading new images will append to the existing ones. <br/>
-              Current images (comma separated):
-              <textarea 
-                name="existing_images" 
-                rows={2} 
-                defaultValue={product?.images.join(', ')} 
-                className="mt-1 w-full px-2 py-1 rounded border border-gray-200 text-xs resize-none"
-              />
+          <p className="text-xs text-gray-500">Images will be converted to WebP.</p>
+          
+          {existingImages.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {existingImages.map((img, i) => (
+                <div key={i} className="relative w-16 h-16 rounded overflow-hidden group">
+                  <Image src={img} alt="Product image" fill className="object-cover" />
+                  <button 
+                    type="button" 
+                    onClick={() => removeImage(i)}
+                    className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -157,7 +173,6 @@ export function ProductFormModal({ product }: ProductFormProps) {
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
           />
         </div>
-
 
         <Button type="submit" className="w-full h-12" disabled={loading}>
           {loading ? 'Saving Changes...' : (isEdit ? 'Update Product' : 'Create Product')}

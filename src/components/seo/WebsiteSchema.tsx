@@ -5,10 +5,10 @@ export default function WebsiteSchema() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "FitZone Apparels",
-    "url": "https://fitzoneapparel.in",
+    "url": "https://fitzoneapparels.com",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://fitzoneapparel.in/search?q={search_term_string}",
+      "target": "https://fitzoneapparels.com/search?q={search_term_string}",
       "query-input": "required name=search_term_string"
     }
   };

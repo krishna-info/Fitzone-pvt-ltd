@@ -26,21 +26,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: [post.image],
       type: 'article',
     },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description: post.excerpt,
-      images: [post.image],
-    },
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        'max-image-preview': 'large',
-      },
-    },
   };
 }
 
@@ -94,9 +79,27 @@ export default async function BlogPostPage({ params }: Props) {
     "description": post.excerpt,
     "image": post.image,
     "datePublished": post.published_at,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://fitzoneapparels.com/article/${post.slug}`
+    },
+    "mainEntityOfPages": {
+      "@type": "WebPage",
+      "@id": `https://www.fitzoneapparels.com/article/${post.slug}`
+    },
+    "ImageObject": {
+      "@type": "ImageObject",
+      "url": post.image,
+      "width": 1200,
+      "height": 630
+    },
+    "articleBody": post.content,
+    "dateModified": post.published_at,
     "author": {
       "@type": "Person",
       "name": post.author_name,
+      "url": `https://fitzoneapparels.com/author/${post.author_slug}`,
+      "image": post.author_avatar
     },
     "publisher": {
       "@type": "Organization",
@@ -106,10 +109,6 @@ export default async function BlogPostPage({ params }: Props) {
         "url": "https://fitzoneapparels.com/logo.png"
       }
     },
-    "mainEntityOfPage": {
-      "@type": "WebPage",
-      "@id": `https://fitzoneapparels.com/article/${post.slug}`
-    }
   };
 
   return (

@@ -6,8 +6,8 @@ export default function LocalBusinessSchema() {
     "@type": "LocalBusiness",
     "name": "FitZone Apparels Pvt. Ltd.",
     "image": "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070",
-    "@id": "https://fitzone.in",
-    "url": "https://fitzone.in",
+    "@id": "https://fitzoneapparels.com",
+    "url": "https://fitzoneapparels.com",
     "telephone": "+91 77422 31208",
     "address": {
       "@type": "PostalAddress",

@@ -6,6 +6,9 @@ import { upsertPost } from '@/app/admin/blog-actions';
 import { Modal } from '@/components/ui/Modal';
 import { Edit, Plus } from 'lucide-react';
 
+import { PRODUCT_CATEGORIES, Product as ProductType } from '@/lib/product-types';
+import { getAvailableProducts } from '@/app/admin/blog-actions';
+
 interface Post {
   id?: string;
   title?: string;
@@ -19,6 +22,8 @@ interface Post {
   author_name?: string;
   author_role?: string;
   author_avatar?: string;
+  promo_product_slug?: string;
+  promo_category_slug?: string;
 }
 
 interface PostFormProps {
@@ -28,16 +33,38 @@ interface PostFormProps {
 export function PostFormModal({ post }: PostFormProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState<Pick<ProductType, 'slug' | 'name' | 'category'>[]>([]);
   const isEdit = !!post;
+
+  // Fetch products for promotion dropdown
+  React.useEffect(() => {
+    if (open) {
+      const fetchProducts = async () => {
+        const data = await getAvailableProducts();
+        if (data) setAvailableProducts(data);
+      };
+      fetchProducts();
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    
     const formData = new FormData(e.currentTarget);
     
+    // Add ID if editing
+    if (post?.id) {
+      formData.append('id', post.id);
+    }
+    
+    // Keep existing image if no new one is uploaded
+    if (post?.image) {
+      formData.append('existing_image', post.image);
+    }
+
     try {
       const result = await upsertPost(formData);
-
       if (result.error) throw new Error(result.error);
       setOpen(false);
     } catch (err) {
@@ -51,8 +78,8 @@ export function PostFormModal({ post }: PostFormProps) {
     <Modal
       open={open}
       onOpenChange={setOpen}
-      title={isEdit ? 'Edit Blog Post' : 'Create Post'}
-      description={isEdit ? `Modifying "${post.title}"` : 'Write a new article for the FitZone blog.'}
+      title={isEdit ? 'Edit Blog Post' : 'Create Guest Post'}
+      description={isEdit ? `Modifying "${post.title}"` : 'Share insights, trends, or news with the FitZone community.'}
       trigger={
         isEdit ? (
           <button className="p-2 bg-gray-50 rounded-lg text-brand-dark hover:bg-brand-secondary transition-colors border border-gray-100">
@@ -60,35 +87,35 @@ export function PostFormModal({ post }: PostFormProps) {
           </button>
         ) : (
           <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-brand-secondary text-brand-dark text-sm font-black hover:scale-105 active:scale-95 transition-all shadow-lg">
-            <Plus className="w-5 h-5" /> Write Post
+            <Plus className="w-5 h-5" /> Write Guest Post
           </button>
         )
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
-        {isEdit && <input type="hidden" name="id" value={post.id} />}
-        
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Title</label>
-          <input 
-            name="title" 
-            required 
-            defaultValue={post?.title} 
-            placeholder="e.g., The Future of Sustainable Athletic Wear"
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
-          />
-        </div>
-
         <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Title</label>
+            <input 
+              name="title" 
+              required 
+              defaultValue={post?.title} 
+              placeholder="Post Title"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+            />
+          </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Slug</label>
             <input 
               name="slug" 
               defaultValue={post?.slug} 
-              placeholder="Auto-generated if left blank"
+              placeholder="Leave empty to auto-generate"
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category</label>
             <input 
@@ -98,9 +125,6 @@ export function PostFormModal({ post }: PostFormProps) {
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Status</label>
             <select 
@@ -113,30 +137,28 @@ export function PostFormModal({ post }: PostFormProps) {
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Published At</label>
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Publish Date</label>
             <input 
               type="datetime-local"
               name="published_at" 
-              defaultValue={post?.published_at ? new Date(post.published_at).toISOString().slice(0,16) : ''} 
+              defaultValue={post?.published_at ? new Date(post.published_at).toISOString().slice(0, 16) : ''}
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Upload Cover Image</label>
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Image Upload (WebP Conversion)</label>
+          {post?.image && (
+            <p className="text-xs text-gray-500 mb-1">Current: {post.image}</p>
+          )}
           <input 
             type="file"
-            name="image_file" 
+            name="image" 
             accept="image/*"
+            required={!isEdit}
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
           />
-          {post?.image && (
-            <div className="mt-2 text-xs text-gray-500">
-              Current Image URL: {post.image}
-              <input type="hidden" name="existing_image" value={post.image} />
-            </div>
-          )}
         </div>
 
         <div className="space-y-2">
@@ -163,7 +185,7 @@ export function PostFormModal({ post }: PostFormProps) {
 
         <div className="pt-4 border-t border-gray-100 mt-6 space-y-4">
           <h4 className="text-xs font-black text-brand-muted uppercase tracking-widest">Author Details</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Author Name</label>
               <input 
@@ -181,15 +203,14 @@ export function PostFormModal({ post }: PostFormProps) {
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Author Avatar URL</label>
-            <input 
-              name="author_avatar" 
-              defaultValue={post?.author_avatar || ''} 
-              placeholder="https://..."
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
-            />
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Avatar URL</label>
+              <input 
+                name="author_avatar" 
+                defaultValue={post?.author_avatar || ''} 
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+              />
+            </div>
           </div>
         </div>
 

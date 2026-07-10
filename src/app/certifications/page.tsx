@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { CertificateCard } from '@/components/sections/CertificateCard';
-import fs from 'fs';
-import path from 'path';
+import { certifications as certs } from '@/content/certifications';
 
 export const metadata: Metadata = {
   title: 'Our Certifications | FitZone Apparels',
@@ -9,21 +8,6 @@ export const metadata: Metadata = {
 };
 
 export default function CertificationsPage() {
-  let certs: any[] = [];
-  
-  try {
-    const certsDir = path.join(process.cwd(), 'src/content/certifications');
-    if (fs.existsSync(certsDir)) {
-      const filenames = fs.readdirSync(certsDir);
-      certs = filenames.map(name => {
-        const filePath = path.join(certsDir, name);
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      });
-    }
-  } catch (error) {
-    console.error("Failed to load certifications from filesystem:", error);
-  }
-
   return (
     <div className="bg-brand-surface min-h-screen">
       <section className="bg-brand-dark py-20 text-center">
@@ -37,7 +21,7 @@ export default function CertificationsPage() {
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {certs.map((cert, index) => (
-              <CertificateCard key={index} cert={cert} />
+              <CertificateCard key={index} cert={cert as any} />
             ))}
           </div>
         </div>

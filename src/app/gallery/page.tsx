@@ -12,10 +12,9 @@ export const revalidate = 60; // Revalidate every minute
 export default async function GalleryPage() {
   const db = getDb();
   
-  const { results } = await db
+  const { results: images } = (await db
     .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC')
-    .all();
-  const images = results as unknown as GalleryImage[];
+    .all()) as { results: GalleryImage[] };
     
   return <GalleryClient images={images} />;
 }

@@ -34,7 +34,7 @@ export function GalleryFormModal() {
       title="Upload Gallery Image"
       trigger={<Button>Add New Image</Button>}
     >
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
               {error}

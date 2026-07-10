@@ -5,27 +5,24 @@ import { revalidatePath } from 'next/cache';
 import { PRODUCT_CATEGORIES } from '@/lib/product-types';
 import sharp from 'sharp';
 
-async function processImageUploads(formData: FormData): Promise<string[]> {
-  const files = formData.getAll('images') as File[];
-  const uploadedUrls: string[] = [];
+async function processImages(formData: FormData): Promise<string[]> {
   const bucket = getBucket();
+  const imageFiles = formData.getAll('images') as File[];
+  const existingImagesRaw = formData.get('existing_images') as string;
+  const finalImages: string[] = existingImagesRaw ? JSON.parse(existingImagesRaw) : [];
 
-  for (const file of files) {
-    if (file.size > 0) {
+  for (const file of imageFiles) {
+    if (file && file.size > 0) {
       const buffer = Buffer.from(await file.arrayBuffer());
       const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
-      
-      const uniqueId = crypto.randomUUID();
-      const key = `products/${uniqueId}.webp`;
-
-      await bucket.put(key, webpBuffer, {
+      const imageKey = `products/${crypto.randomUUID()}.webp`;
+      await bucket.put(imageKey, webpBuffer, {
         httpMetadata: { contentType: 'image/webp' }
       });
-
-      uploadedUrls.push(`/api/images/${key}`);
+      finalImages.push(`/api/images/${imageKey}`);
     }
   }
-  return uploadedUrls;
+  return finalImages;
 }
 
 export async function updateProduct(formData: FormData) {
@@ -39,16 +36,11 @@ export async function updateProduct(formData: FormData) {
   const moq = parseInt(formData.get('moq') as string) || 1;
   const description = formData.get('description') as string;
   const is_active = formData.get('is_active') === 'true' ? 1 : 0;
-  
-  const existingImagesList = formData.get('existing_images') as string;
-  let images = existingImagesList ? existingImagesList.split(',').map(s => s.trim()).filter(Boolean) : [];
-  
   const category = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
 
-  try {
-    const newUrls = await processImageUploads(formData);
-    images = [...images, ...newUrls];
+  const images = await processImages(formData);
 
+  try {
     await db.prepare(`
       UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, is_active = ?, updated_at = ?
       WHERE id = ?
@@ -70,6 +62,7 @@ export async function deleteProduct(id: string) {
   const db = getDb();
   
   try {
+    // In a real app we might also delete the images from R2 here.
     await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
   } catch (error: any) {
     throw new Error(error.message);
@@ -82,8 +75,8 @@ export async function deleteProduct(id: string) {
 
 export async function createProduct(formData: FormData) {
   const db = getDb();
-  
   const id = crypto.randomUUID();
+  
   const name = formData.get('name') as string;
   const slug = formData.get('slug') as string;
   const category_slug = formData.get('category_slug') as string;
@@ -93,9 +86,9 @@ export async function createProduct(formData: FormData) {
   const is_active = formData.get('is_active') === 'true' ? 1 : 0;
   const category = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
 
-  try {
-    const images = await processImageUploads(formData);
+  const images = await processImages(formData);
 
+  try {
     await db.prepare(`
       INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, is_active)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)

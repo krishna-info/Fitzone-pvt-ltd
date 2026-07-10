@@ -12,26 +12,27 @@ export const metadata: Metadata = {
 };
 
 export default async function ProductsManagementPage({
-  searchParams,
+  searchParams
 }: {
-  searchParams: { page?: string };
+  searchParams: { page?: string }
 }) {
   const db = getDb();
   
-  const page = parseInt(searchParams.page || '1');
+  const page = Number(searchParams.page) || 1;
   const limit = 12;
   const offset = (page - 1) * limit;
 
   let products: any[] = [];
-  let totalPages = 0;
   let totalProducts = 0;
-
+  
   try {
-    const { results: countResults } = await db.prepare('SELECT COUNT(*) as total FROM products').all();
-    totalProducts = (countResults[0] as any).total;
-    totalPages = Math.ceil(totalProducts / limit);
-
-    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(limit, offset).all();
+    const { results: countResults } = await db.prepare('SELECT COUNT(*) as count FROM products').all();
+    totalProducts = countResults[0].count as number;
+    
+    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?')
+      .bind(limit, offset)
+      .all();
+      
     products = results;
     // Map stringified JSON arrays back to array object for the UI
     products = products.map((p: any) => ({
@@ -41,6 +42,8 @@ export default async function ProductsManagementPage({
   } catch (error: any) {
     console.error('Error fetching products:', error.message);
   }
+
+  const totalPages = Math.ceil(totalProducts / limit);
 
   return (
     <div className="bg-brand-surface min-h-screen pb-20">
@@ -71,7 +74,7 @@ export default async function ProductsManagementPage({
             </div>
             <div className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-brand-dark flex items-center gap-2">
               <Package className="w-4 h-4 text-brand-primary" />
-              {totalProducts} Products Total
+              {products?.length || 0} Products Total
             </div>
           </div>
 
