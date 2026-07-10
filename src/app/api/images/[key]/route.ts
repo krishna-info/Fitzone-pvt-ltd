@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBucket } from '@/lib/db';
 
-export const runtime = 'edge';
-
 export async function GET(
   request: NextRequest,
   { params }: { params: { key: string } }
