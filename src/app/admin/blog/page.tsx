@@ -25,11 +25,11 @@ export default async function BlogManagementPage({
 
   let posts: any[] = [];
   let totalPosts = 0;
-  
+
   try {
     const { results: countResults } = await db.prepare('SELECT COUNT(*) as count FROM posts').all();
     totalPosts = countResults[0].count as number;
-    
+
     const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?')
       .bind(limit, offset)
       .all();
@@ -69,7 +69,7 @@ export default async function BlogManagementPage({
             </div>
             <div className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-bold text-brand-dark flex items-center gap-2">
               <FileText className="w-4 h-4 text-brand-primary" />
-              {posts?.length || 0} Articles Total
+              {totalPosts} Articles Total
             </div>
           </div>
 
@@ -134,7 +134,7 @@ export default async function BlogManagementPage({
                 </div>
               )}
             </div>
-            
+
             <Pagination currentPage={page} totalPages={totalPages} basePath="/admin/blog" />
           </div>
         </div>

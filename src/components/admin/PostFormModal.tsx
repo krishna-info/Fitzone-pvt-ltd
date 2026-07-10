@@ -50,14 +50,14 @@ export function PostFormModal({ post }: PostFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const formData = new FormData(e.currentTarget);
-    
+
     // Add ID if editing
     if (post?.id) {
       formData.append('id', post.id);
     }
-    
+
     // Keep existing image if no new one is uploaded
     if (post?.image) {
       formData.append('existing_image', post.image);
@@ -96,19 +96,19 @@ export function PostFormModal({ post }: PostFormProps) {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Title</label>
-            <input 
-              name="title" 
-              required 
-              defaultValue={post?.title} 
+            <input
+              name="title"
+              required
+              defaultValue={post?.title}
               placeholder="Post Title"
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Slug</label>
-            <input 
-              name="slug" 
-              defaultValue={post?.slug} 
+            <input
+              name="slug"
+              defaultValue={post?.slug}
               placeholder="Leave empty to auto-generate"
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
@@ -118,17 +118,17 @@ export function PostFormModal({ post }: PostFormProps) {
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category</label>
-            <input 
-              name="category" 
-              required 
-              defaultValue={post?.category || 'Trends'} 
+            <input
+              name="category"
+              required
+              defaultValue={post?.category || 'Trends'}
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Status</label>
-            <select 
-              name="is_published" 
+            <select
+              name="is_published"
               defaultValue={String(post?.is_published ?? true)}
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             >
@@ -138,10 +138,13 @@ export function PostFormModal({ post }: PostFormProps) {
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Publish Date</label>
-            <input 
+            <input
               type="datetime-local"
-              name="published_at" 
-              defaultValue={post?.published_at ? new Date(post.published_at).toISOString().slice(0, 16) : ''}
+              name="published_at"
+              defaultValue={post?.published_at ? (() => {
+                const d = new Date(post.published_at);
+                return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+              })() : ''}
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
@@ -152,9 +155,9 @@ export function PostFormModal({ post }: PostFormProps) {
           {post?.image && (
             <p className="text-xs text-gray-500 mb-1">Current: {post.image}</p>
           )}
-          <input 
+          <input
             type="file"
-            name="image" 
+            name="image"
             accept="image/*"
             required={!isEdit}
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
@@ -163,22 +166,22 @@ export function PostFormModal({ post }: PostFormProps) {
 
         <div className="space-y-2">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Excerpt (Brief Summary)</label>
-          <textarea 
-            name="excerpt" 
-            rows={2} 
+          <textarea
+            name="excerpt"
+            rows={2}
             required
-            defaultValue={post?.excerpt} 
+            defaultValue={post?.excerpt}
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
           />
         </div>
 
         <div className="space-y-2">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Content (Markdown supported)</label>
-          <textarea 
-            name="content" 
-            rows={8} 
+          <textarea
+            name="content"
+            rows={8}
             required
-            defaultValue={post?.content} 
+            defaultValue={post?.content}
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
           />
         </div>
@@ -188,26 +191,26 @@ export function PostFormModal({ post }: PostFormProps) {
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Author Name</label>
-              <input 
-                name="author_name" 
-                required 
-                defaultValue={post?.author_name || 'Admin'} 
+              <input
+                name="author_name"
+                required
+                defaultValue={post?.author_name || 'Admin'}
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
               />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Author Role</label>
-              <input 
-                name="author_role" 
-                defaultValue={post?.author_role || 'Executive'} 
+              <input
+                name="author_role"
+                defaultValue={post?.author_role || 'Executive'}
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
               />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Avatar URL</label>
-              <input 
-                name="author_avatar" 
-                defaultValue={post?.author_avatar || ''} 
+              <input
+                name="author_avatar"
+                defaultValue={post?.author_avatar || ''}
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
               />
             </div>
