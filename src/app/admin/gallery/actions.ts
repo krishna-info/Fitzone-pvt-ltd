@@ -15,7 +15,7 @@ export async function uploadGalleryImage(formData: FormData) {
     }
 
     let imageUrl = manualUrl;
-    let uniqueId = crypto.randomUUID();
+    const uniqueId = crypto.randomUUID();
 
     if (file && file.size > 0) {
       const bucket = getBucket();
