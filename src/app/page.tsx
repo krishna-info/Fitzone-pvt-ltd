@@ -8,7 +8,7 @@ import { getDb } from '@/lib/db';
 import { getLatestProducts } from '@/lib/products';
 import Link from 'next/link';
 
-
+export const dynamic = 'force-dynamic';
 export default async function Home() {
   let posts: any[] = [];
   

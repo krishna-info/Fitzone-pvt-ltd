@@ -34,6 +34,8 @@ export function PostFormModal({ post }: PostFormProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<Pick<ProductType, 'slug' | 'name' | 'category'>[]>([]);
+  const [manualUrl, setManualUrl] = useState<string>(post?.image || '');
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const isEdit = !!post;
 
   // Fetch products for promotion dropdown
@@ -67,11 +69,6 @@ export function PostFormModal({ post }: PostFormProps) {
       // Add ID if editing
       if (post?.id) {
         formData.append('id', post.id);
-      }
-
-      // Keep existing image if no new one is uploaded
-      if (post?.image) {
-        formData.append('existing_image', post.image);
       }
 
       const result = await upsertPost(formData);
@@ -161,17 +158,42 @@ export function PostFormModal({ post }: PostFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Image Upload (WebP Conversion)</label>
-          {post?.image && (
-            <p className="text-xs text-gray-500 mb-1">Current: {post.image}</p>
-          )}
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            required={!isEdit}
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
-          />
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Image / Public URL</label>
+          <div className="flex gap-4 items-start">
+            {(filePreview || manualUrl) && (
+               <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 shrink-0 bg-gray-50">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={filePreview || manualUrl} alt="Preview" className="object-cover w-full h-full" />
+               </div>
+            )}
+            <div className="flex-1 space-y-2">
+              <input
+                type="text"
+                name="existing_image"
+                value={manualUrl}
+                onChange={(e) => setManualUrl(e.target.value)}
+                placeholder="Enter public image URL..."
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+              />
+              <div className="relative">
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setFilePreview(URL.createObjectURL(file));
+                    } else {
+                      setFilePreview(null);
+                    }
+                  }}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
+                />
+              </div>
+              <p className="text-xs text-gray-500">Select a file to upload (converts to WebP), or paste a public URL.</p>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
