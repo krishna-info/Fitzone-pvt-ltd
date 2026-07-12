@@ -44,7 +44,8 @@ export function ProductFormModal({ product }: ProductFormProps) {
         }
       }
 
-      formData.append('existing_images', JSON.stringify(existingImages));
+      const validImages = existingImages.filter(img => img.trim() !== '');
+      formData.append('existing_images', JSON.stringify(validImages));
       
       if (isEdit) {
         await updateProduct(formData);
@@ -152,33 +153,75 @@ export function ProductFormModal({ product }: ProductFormProps) {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Upload Images</label>
-          <input 
-            type="file"
-            name="images"
-            multiple
-            accept="image/*"
-            className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
-          />
-          <p className="text-xs text-gray-500">Images will be converted to WebP.</p>
+        <div className="space-y-4">
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Images & Public URLs</label>
           
-          {existingImages.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {existingImages.map((img, i) => (
-                <div key={i} className="relative w-16 h-16 rounded overflow-hidden group">
-                  <Image src={img} alt="Product image" fill className="object-cover" />
-                  <button 
-                    type="button" 
-                    onClick={() => removeImage(i)}
-                    className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                  >
-                    ×
-                  </button>
+          <div className="space-y-3">
+            {existingImages.map((img, i) => (
+              <div key={i} className="flex gap-4 items-start bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="relative w-16 h-16 rounded overflow-hidden shrink-0 border border-gray-300 bg-white">
+                  {img ? (
+                     /* eslint-disable-next-line @next/next/no-img-element */
+                     <img src={img} alt="Product image" className="object-cover w-full h-full" />
+                  ) : (
+                     <div className="w-full h-full bg-gray-200" />
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="flex-1 space-y-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={img}
+                      onChange={(e) => {
+                        const newImages = [...existingImages];
+                        newImages[i] = e.target.value;
+                        setExistingImages(newImages);
+                      }}
+                      placeholder="Enter public image URL..."
+                      className="w-full px-3 py-1.5 rounded-md border border-gray-300 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none text-sm"
+                    />
+                    {img && (
+                      <a 
+                        href={img} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex shrink-0 items-center justify-center px-3 rounded-lg border border-gray-300 bg-white text-gray-500 hover:text-brand-primary transition-colors"
+                        title="Open image in new tab"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                      </a>
+                    )}
+                    <button 
+                      type="button" 
+                      onClick={() => removeImage(i)}
+                      className="flex shrink-0 items-center justify-center px-3 rounded-lg border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+                      title="Remove Image"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <Button type="button" variant="outline" onClick={() => setExistingImages([...existingImages, ''])}>
+              + Add Image URL
+            </Button>
+          </div>
+
+          <div className="pt-3 border-t border-gray-200">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Upload New Files</label>
+            <input 
+              type="file"
+              name="images"
+              multiple
+              accept="image/*"
+              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+            />
+            <p className="text-xs text-gray-500 mt-1">Files will be converted to WebP format.</p>
+          </div>
         </div>
 
         <div className="space-y-2">

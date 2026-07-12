@@ -18,7 +18,7 @@ export async function upsertPost(formData: FormData) {
   const author_avatar = formData.get('author_avatar') as string;
   const is_published = formData.get('is_published') === 'true' ? 1 : 0;
   const published_at = (formData.get('published_at') as string) || new Date().toISOString();
-  
+
   if (!slug && title) {
     slug = title.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
   }
@@ -26,21 +26,22 @@ export async function upsertPost(formData: FormData) {
   // Handle Image Upload
   let imageUrl = formData.get('existing_image') as string;
   const imageFile = formData.get('image') as File;
-  
+
   if (imageFile && imageFile.size > 0) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     // The file is already converted to WebP on the client side
-    
+
     const imageKey = `blog/${crypto.randomUUID()}.webp`;
     await bucket.put(imageKey, buffer, {
       httpMetadata: { contentType: 'image/webp' }
     });
-    imageUrl = `/api/images/${imageKey}`;
+    const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
+    imageUrl = `${r2BaseUrl.replace(/\/$/, '')}/${imageKey}`;
   }
 
   try {
     const isUpdate = !!formData.get('id');
-    
+
     if (isUpdate) {
       await db.prepare(`
         UPDATE posts SET 
@@ -49,8 +50,8 @@ export async function upsertPost(formData: FormData) {
           is_published = ?, published_at = ?, updated_at = ?
         WHERE id = ?
       `).bind(
-        title, slug, excerpt, content, imageUrl, 
-        category, author_name, author_role, author_avatar, 
+        title, slug, excerpt, content, imageUrl,
+        category, author_name, author_role, author_avatar,
         is_published, published_at, new Date().toISOString(), id
       ).run();
     } else {
@@ -61,8 +62,8 @@ export async function upsertPost(formData: FormData) {
           is_published, published_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(
-        id, title, slug, excerpt, content, imageUrl, 
-        category, author_name, author_role, author_avatar, 
+        id, title, slug, excerpt, content, imageUrl,
+        category, author_name, author_role, author_avatar,
         is_published, published_at
       ).run();
     }

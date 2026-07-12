@@ -18,7 +18,8 @@ async function processImages(formData: FormData): Promise<string[]> {
       await bucket.put(imageKey, buffer, {
         httpMetadata: { contentType: 'image/webp' }
       });
-      finalImages.push(`/api/images/${imageKey}`);
+      const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
+      finalImages.push(`${r2BaseUrl.replace(/\/$/, '')}/${imageKey}`);
     }
   }
   return finalImages;
@@ -26,7 +27,7 @@ async function processImages(formData: FormData): Promise<string[]> {
 
 export async function updateProduct(formData: FormData) {
   const db = getDb();
-  
+
   const id = formData.get('id') as string;
   const name = formData.get('name') as string;
   const slug = formData.get('slug') as string;
@@ -49,7 +50,7 @@ export async function updateProduct(formData: FormData) {
   } catch (error: any) {
     throw new Error(error.message);
   }
-  
+
   revalidatePath('/admin/products');
   revalidatePath('/products');
   revalidatePath(`/products/${category_slug}`);
@@ -59,14 +60,14 @@ export async function updateProduct(formData: FormData) {
 
 export async function deleteProduct(id: string) {
   const db = getDb();
-  
+
   try {
     // In a real app we might also delete the images from R2 here.
     await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
   } catch (error: any) {
     throw new Error(error.message);
   }
-  
+
   revalidatePath('/admin/products');
   revalidatePath('/products');
   return { success: true };
@@ -75,7 +76,7 @@ export async function deleteProduct(id: string) {
 export async function createProduct(formData: FormData) {
   const db = getDb();
   const id = crypto.randomUUID();
-  
+
   const name = formData.get('name') as string;
   const slug = formData.get('slug') as string;
   const category_slug = formData.get('category_slug') as string;
@@ -97,7 +98,7 @@ export async function createProduct(formData: FormData) {
   } catch (error: any) {
     throw new Error(error.message);
   }
-  
+
   revalidatePath('/admin/products');
   revalidatePath('/products');
   return { success: true };
