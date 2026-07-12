@@ -25,10 +25,27 @@ export function ProductFormModal({ product }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    const formData = new FormData(e.currentTarget);
-    formData.append('existing_images', JSON.stringify(existingImages));
     
     try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const originalFiles = formData.getAll('images') as File[];
+      formData.delete('images');
+      
+      const { convertToWebP } = await import('@/lib/image-client');
+      
+      for (const file of originalFiles) {
+        if (file && file.size > 0) {
+          const webpBlob = await convertToWebP(file);
+          const newName = file.name.replace(/\.[^/.]+$/, "") + '.webp';
+          formData.append('images', webpBlob, newName);
+        } else {
+          formData.append('images', file);
+        }
+      }
+
+      formData.append('existing_images', JSON.stringify(existingImages));
+      
       if (isEdit) {
         await updateProduct(formData);
       } else {

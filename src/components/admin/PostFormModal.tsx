@@ -51,19 +51,29 @@ export function PostFormModal({ post }: PostFormProps) {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-
-    // Add ID if editing
-    if (post?.id) {
-      formData.append('id', post.id);
-    }
-
-    // Keep existing image if no new one is uploaded
-    if (post?.image) {
-      formData.append('existing_image', post.image);
-    }
-
     try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const originalFile = formData.get('image') as File | null;
+      
+      if (originalFile && originalFile.size > 0) {
+        formData.delete('image');
+        const { convertToWebP } = await import('@/lib/image-client');
+        const webpBlob = await convertToWebP(originalFile);
+        const newName = originalFile.name.replace(/\.[^/.]+$/, "") + '.webp';
+        formData.append('image', webpBlob, newName);
+      }
+
+      // Add ID if editing
+      if (post?.id) {
+        formData.append('id', post.id);
+      }
+
+      // Keep existing image if no new one is uploaded
+      if (post?.image) {
+        formData.append('existing_image', post.image);
+      }
+
       const result = await upsertPost(formData);
       if (result.error) throw new Error(result.error);
       setOpen(false);

@@ -15,13 +15,28 @@ export function GalleryFormModal() {
     setIsLoading(true);
     setError(null);
 
-    const formData = new FormData(e.currentTarget);
-    const result = await uploadGalleryImage(formData);
+    try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+      const originalFile = formData.get('image') as File | null;
+      
+      if (originalFile && originalFile.size > 0) {
+        formData.delete('image');
+        const { convertToWebP } = await import('@/lib/image-client');
+        const webpBlob = await convertToWebP(originalFile);
+        const newName = originalFile.name.replace(/\.[^/.]+$/, "") + '.webp';
+        formData.append('image', webpBlob, newName);
+      }
 
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setIsOpen(false);
+      const result = await uploadGalleryImage(formData);
+
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setIsOpen(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     }
     
     setIsLoading(false);

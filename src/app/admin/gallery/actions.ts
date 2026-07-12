@@ -2,7 +2,6 @@
 
 import { getDb, getBucket } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import sharp from 'sharp';
 
 export async function uploadGalleryImage(formData: FormData) {
   try {
@@ -18,12 +17,12 @@ export async function uploadGalleryImage(formData: FormData) {
     const db = getDb();
     
     const buffer = Buffer.from(await file.arrayBuffer());
-    const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+    // The file is already converted to WebP on the client side
     
     const uniqueId = crypto.randomUUID();
     const key = `gallery/${uniqueId}.webp`;
 
-    await bucket.put(key, webpBuffer, {
+    await bucket.put(key, buffer, {
       httpMetadata: { contentType: 'image/webp' }
     });
 

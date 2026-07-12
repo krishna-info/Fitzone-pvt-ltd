@@ -3,7 +3,6 @@
 import { getDb, getBucket } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { PRODUCT_CATEGORIES } from '@/lib/product-types';
-import sharp from 'sharp';
 
 async function processImages(formData: FormData): Promise<string[]> {
   const bucket = getBucket();
@@ -14,9 +13,9 @@ async function processImages(formData: FormData): Promise<string[]> {
   for (const file of imageFiles) {
     if (file && file.size > 0) {
       const buffer = Buffer.from(await file.arrayBuffer());
-      const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+      // The file is already converted to WebP on the client side
       const imageKey = `products/${crypto.randomUUID()}.webp`;
-      await bucket.put(imageKey, webpBuffer, {
+      await bucket.put(imageKey, buffer, {
         httpMetadata: { contentType: 'image/webp' }
       });
       finalImages.push(`/api/images/${imageKey}`);

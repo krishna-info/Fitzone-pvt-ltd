@@ -2,7 +2,6 @@
 
 import { getDb, getBucket } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import sharp from 'sharp';
 
 export async function upsertPost(formData: FormData) {
   const db = getDb();
@@ -30,10 +29,10 @@ export async function upsertPost(formData: FormData) {
   
   if (imageFile && imageFile.size > 0) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const webpBuffer = await sharp(buffer).webp({ quality: 80 }).toBuffer();
+    // The file is already converted to WebP on the client side
     
     const imageKey = `blog/${crypto.randomUUID()}.webp`;
-    await bucket.put(imageKey, webpBuffer, {
+    await bucket.put(imageKey, buffer, {
       httpMetadata: { contentType: 'image/webp' }
     });
     imageUrl = `/api/images/${imageKey}`;
