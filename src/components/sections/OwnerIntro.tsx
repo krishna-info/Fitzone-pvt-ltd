@@ -12,7 +12,7 @@ export function OwnerIntro() {
         <div className="flex flex-col md:flex-row gap-16 items-center">
           <div className="w-full md:w-1/3 aspect-[3/4] relative rounded-brand-lg overflow-hidden shadow-float">
              <Image 
-               src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1974&auto=format&fit=crop" 
+               src="/images/Amrit-Singh-MD-of-fitzone.webp?q=80&w=1974&auto=format&fit=crop" 
                alt="Amrit Singh Inda - Owner of FitZone"
                fill
                className="object-cover"
