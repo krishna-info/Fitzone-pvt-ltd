@@ -3,6 +3,11 @@ import { Product } from './product-types';
 
 export * from './product-types';
 
+const parseImages = (p: any) => ({
+  ...p,
+  images: typeof p.images === 'string' ? JSON.parse(p.images) : (p.images || [])
+});
+
 // Fetch all active products from Supabase with pagination
 export async function getAllProducts(limit?: number, offset?: number): Promise<Product[]> {
   const db = getDb();
@@ -17,7 +22,7 @@ export async function getAllProducts(limit?: number, offset?: number): Promise<P
 
   try {
     const { results } = await db.prepare(queryStr).all();
-    return results;
+    return results.map(parseImages);
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -38,7 +43,7 @@ export async function getProductsByCategory(categorySlug: string, limit?: number
 
   try {
     const { results } = await db.prepare(queryStr).bind(categorySlug).all();
-    return results;
+    return results.map(parseImages);
   } catch (error) {
     console.error('Error fetching products by category:', error);
     return [];
@@ -51,7 +56,7 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
   try {
     const { results } = await db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT ?')
       .bind(limit).all();
-    return results;
+    return results.map(parseImages);
   } catch (error) {
     console.error('Error fetching latest products:', error);
     return [];
@@ -64,7 +69,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const product = await db.prepare('SELECT * FROM products WHERE slug = ?')
       .bind(slug).first();
-    return product || null;
+    return product ? parseImages(product) : null;
   } catch (error) {
     return null;
   }
