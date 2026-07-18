@@ -79,7 +79,7 @@ export function ProductDetailClient({
                   {product.images.map((img, i) => (
                     <div key={i} className="flex-[0_0_100%] relative h-full">
                       <Image
-                        src={`${img}&auto=format&fit=crop&w=1000`}
+                        src={img || ''}
                         alt={`${product.name} - Image ${i + 1}`}
                         fill
                         className="object-cover"
@@ -108,7 +108,7 @@ export function ProductDetailClient({
                     onClick={() => emblaApi?.scrollTo(i)}
                     className="relative w-24 h-24 flex-shrink-0 rounded-brand overflow-hidden border-2 border-transparent hover:border-brand-primary transition-all active:scale-95"
                   >
-                    <Image src={`${img}&auto=format&fit=crop&w=200`} alt="" fill className="object-cover" />
+                    <Image src={img || ''} alt="" fill className="object-cover" />
                   </button>
                 ))}
               </div>

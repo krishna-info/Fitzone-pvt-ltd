@@ -95,7 +95,6 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Slug</label>
             <input 
               name="slug" 
-              required 
               placeholder="performance-tshirt"
               defaultValue={product?.slug} 
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"

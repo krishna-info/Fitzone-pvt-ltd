@@ -92,7 +92,7 @@ export default async function ProductsManagementPage({
 
                     <div className="aspect-[4/5] relative bg-gray-50">
                       <Image
-                        src={product.images?.[0] || 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=1780'}
+                        src={product.images?.[0] || ''}
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"

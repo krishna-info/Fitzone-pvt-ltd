@@ -34,7 +34,7 @@ export default function ProductsClient() {
                 className="group relative h-[400px] rounded-brand-lg overflow-hidden shadow-card hover:shadow-float transition-all"
               >
                 <Image 
-                  src={`${cat.image}&auto=format&fit=crop&w=600`}
+                  src={cat.image || ''}
                   alt={cat.name}
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-700"

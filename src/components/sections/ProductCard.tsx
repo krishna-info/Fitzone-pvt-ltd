@@ -18,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link href={`/products/${product.category_slug}/${product.slug}`}>
         <div className="aspect-square relative overflow-hidden bg-gray-50">
           <Image
-            src={`${product.images[0]}&auto=format&fit=crop&w=600`}
+            src={product.images?.[0] || ''}
             alt={product.name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -49,12 +49,17 @@ export function ProductCard({ product }: { product: Product }) {
 
         </div>
         
-        <div className="pt-2">
-          <Link href={`/products/${product.category_slug}/${product.slug}`}>
+        <div className="pt-2 flex flex-col gap-2">
+          <Link href={`/products/${product.category_slug}/${product.slug}`} className="w-full">
             <Button variant="outline" size="sm" className="w-full group-hover:bg-brand-primary group-hover:text-white transition-all">
               View Product
             </Button>
           </Link>
+          <div className="text-[10px] bg-gray-50 p-2 rounded border border-gray-100 overflow-hidden whitespace-nowrap text-ellipsis">
+            <a href={product.images?.[0] || '#'} target="_blank" rel="noreferrer" className="text-brand-primary hover:underline font-mono">
+              {product.images?.[0] || 'No Image URL'}
+            </a>
+          </div>
         </div>
       </div>
     </motion.div>

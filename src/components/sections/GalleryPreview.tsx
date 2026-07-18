@@ -1,5 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
+import { Eye } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/product-types';
@@ -19,27 +20,39 @@ export function GalleryPreview({ products }: GalleryPreviewProps) {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {products.map((product, i) => (
-            <motion.div 
-              key={product.id} 
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="aspect-[3/4] bg-gray-100 rounded-brand overflow-hidden shadow-card hover:shadow-float transition-all relative group"
-            >
-              <Link href={`/products/${product.category_slug}/${product.slug}`}>
-                <Image 
-                  src={`${product.images[0]}&auto=format&fit=crop&w=600`} 
-                  alt={product.name} 
-                  fill 
-                  className="object-cover group-hover:scale-110 transition-transform duration-700" 
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 text-left">
-                  <p className="text-white text-xs font-bold uppercase truncate">{product.name}</p>
-                  <p className="text-brand-secondary text-[10px] font-black tracking-tighter">VIEW DETAILS</p>
-                </div>
-              </Link>
-            </motion.div>
+            <div key={product.id} className="flex flex-col gap-2">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="aspect-[3/4] bg-gray-100 rounded-brand overflow-hidden shadow-card hover:shadow-float transition-all relative group"
+              >
+                <Link href={`/products/${product.category_slug}/${product.slug}`} className="block w-full h-full">
+                  <Image 
+                    src={product.images?.[0] || ''}
+                    alt={product.name} 
+                    fill 
+                    className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 text-left">
+                    <p className="text-white text-xs font-bold uppercase truncate">{product.name}</p>
+                    <p className="text-brand-secondary text-[10px] font-black tracking-tighter">VIEW DETAILS</p>
+                  </div>
+                </Link>
+              </motion.div>
+              <div className="text-left bg-gray-50 p-1.5 rounded border border-gray-100 overflow-hidden whitespace-nowrap text-ellipsis">
+                <a 
+                  href={product.images?.[0] || '#'} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="text-[10px] text-brand-primary hover:underline font-mono"
+                  title="View Original Image"
+                >
+                  {product.images?.[0] || 'No Image URL'}
+                </a>
+              </div>
+            </div>
           ))}
         </div>
         
