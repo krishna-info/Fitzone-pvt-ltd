@@ -21,7 +21,7 @@ export function GalleryPreview({ products }: GalleryPreviewProps) {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {products.map((product, i) => (
             <div key={product.id} className="flex flex-col gap-2">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -29,11 +29,11 @@ export function GalleryPreview({ products }: GalleryPreviewProps) {
                 className="aspect-[3/4] bg-gray-100 rounded-brand overflow-hidden shadow-card hover:shadow-float transition-all relative group"
               >
                 <Link href={`/products/${product.category_slug}/${product.slug}`} className="block w-full h-full">
-                  <Image 
+                  <Image
                     src={product.images?.[0] || ''}
-                    alt={product.name} 
-                    fill 
-                    className="object-cover group-hover:scale-110 transition-transform duration-700" 
+                    alt={product.name}
+                    fill
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4 text-left">
                     <p className="text-white text-xs font-bold uppercase truncate">{product.name}</p>
@@ -41,7 +41,7 @@ export function GalleryPreview({ products }: GalleryPreviewProps) {
                   </div>
                 </Link>
               </motion.div>
-              <div className="text-left bg-gray-50 p-1.5 rounded border border-gray-100 overflow-hidden whitespace-nowrap text-ellipsis">
+              {/* <div className="text-left bg-gray-50 p-1.5 rounded border border-gray-100 overflow-hidden whitespace-nowrap text-ellipsis">
                 <a 
                   href={product.images?.[0] || '#'} 
                   target="_blank" 
@@ -51,11 +51,11 @@ export function GalleryPreview({ products }: GalleryPreviewProps) {
                 >
                   {product.images?.[0] || 'No Image URL'}
                 </a>
-              </div>
+              </div> */}
             </div>
           ))}
         </div>
-        
+
         <div className="pt-8">
           <Link href="/products" className="inline-flex items-center gap-2 text-brand-dark font-bold hover:text-brand-primary transition-colors border-b-2 border-brand-secondary pb-1">
             Browse Full Catalogue

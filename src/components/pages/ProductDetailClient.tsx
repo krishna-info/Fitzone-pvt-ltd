@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ShoppingBag, ShieldCheck, MessageCircle, ChevronRight, CheckCircle, Truck } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ShoppingBag, ShieldCheck, MessageCircle, ChevronRight, CheckCircle, Truck, Maximize2, X, Sliders } from 'lucide-react';
 import { Product } from '@/lib/product-types';
 import { Button } from '@/components/ui/Button';
 import { useCartStore } from '@/store/cartStore';
@@ -27,6 +27,13 @@ export function ProductDetailClient({
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [error, setError] = useState<string>('');
+
+  // Image Showcase Drawer State
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerImageIndex, setDrawerImageIndex] = useState(0);
+
+  // Description Expansion State
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const [emblaRef, emblaApi] = useEmblaCarousel();
   const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
@@ -64,25 +71,54 @@ export function ProductDetailClient({
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, '_blank');
   };
 
-
   const [activeTab, setActiveTab] = useState<'features' | 'specs'>('features');
+
+  // Parse specifications cleanly
+  let rawSpecs: Record<string, string> = {};
+  try {
+    rawSpecs = typeof product.specifications === 'string'
+      ? JSON.parse(product.specifications)
+      : (product.specifications || {});
+  } catch {
+    rawSpecs = {};
+  }
+  const cleanSpecsEntries = Object.entries(rawSpecs).filter(([k]) => !k.startsWith('_'));
+
+  const defaultSpecsMap: Record<string, string> = {
+    'Material Composition': '88% High-Grade Moisture-Wicking Polyester, 12% Spandex',
+    'Fit Type': 'Ergonomic Athletic Fit',
+    'Fabric Care': 'Machine wash cold with like colors, Tumble dry low',
+    'Country of Origin': 'Made in India',
+    'Minimum Order Quantity': `${product.moq || 50} Units`
+  };
+
+  const finalSpecsMap = cleanSpecsEntries.length > 0
+    ? Object.fromEntries(cleanSpecsEntries)
+    : defaultSpecsMap;
+
+  // Description 406 Character Truncation Logic
+  const descriptionText = product.description || '';
+  const shouldTruncateDesc = descriptionText.length > 406;
+  const displayDescription = (!isDescExpanded && shouldTruncateDesc)
+    ? `${descriptionText.slice(0, 406)}...`
+    : descriptionText;
 
   return (
     <div className="bg-white min-h-screen pb-24 lg:pb-12">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-brand-muted mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
-          <Link href="/products" className="hover:text-brand-dark transition-colors">Products</Link>
+          <Link href="/products" prefetch={false} className="hover:text-brand-dark transition-colors">Products</Link>
           <ChevronRight className="w-4 h-4 flex-shrink-0" />
-          <Link href={`/products/${product.category_slug}`} className="hover:text-brand-dark transition-colors">{product.category}</Link>
+          <Link href={`/products/${product.category_slug}`} prefetch={false} className="hover:text-brand-dark transition-colors">{product.category}</Link>
           <ChevronRight className="w-4 h-4 flex-shrink-0" />
           <span className="text-brand-dark font-medium truncate">{product.name}</span>
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          {/* Image Carousel */}
+          {/* Image Carousel & Drawer Trigger */}
           <div className="space-y-4">
-            <div className="relative rounded-brand-lg overflow-hidden bg-gray-50 aspect-square shadow-inner">
+            <div className="relative rounded-brand-lg overflow-hidden bg-gray-50 aspect-square shadow-inner group">
               <div className="overflow-hidden h-full" ref={emblaRef}>
                 <div className="flex h-full">
                   {product.images.map((img, i) => (
@@ -91,8 +127,12 @@ export function ProductDetailClient({
                         src={img || ''}
                         alt={`${product.name} - Image ${i + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-cover cursor-pointer"
                         priority={i === 0}
+                        onClick={() => {
+                          setDrawerImageIndex(i);
+                          setIsDrawerOpen(true);
+                        }}
                       />
                     </div>
                   ))}
@@ -108,7 +148,19 @@ export function ProductDetailClient({
                   </button>
                 </>
               )}
+              {/* Drawer Trigger Overlay Badge */}
+              <button 
+                onClick={() => {
+                  setDrawerImageIndex(0);
+                  setIsDrawerOpen(true);
+                }} 
+                className="absolute bottom-4 right-4 bg-brand-dark/90 hover:bg-brand-primary text-white text-xs font-extrabold px-4 py-2 rounded-full backdrop-blur-md flex items-center gap-2 shadow-float transition-all uppercase tracking-wider"
+              >
+                <Maximize2 className="w-3.5 h-3.5 text-brand-secondary" />
+                Showcase All Images ({product.images.length})
+              </button>
             </div>
+
             {product.images.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {product.images.map((img, i) => (
@@ -171,58 +223,73 @@ export function ProductDetailClient({
                </div>
             </div>
 
-            <p className="text-brand-muted leading-relaxed text-lg">{product.description}</p>
+            {/* Description (Truncated to 406 characters) */}
+            <div className="space-y-2">
+              <p className="text-brand-muted leading-relaxed text-base">{displayDescription}</p>
+              {shouldTruncateDesc && (
+                <button
+                  onClick={() => setIsDescExpanded(!isDescExpanded)}
+                  className="text-xs font-extrabold text-brand-primary uppercase tracking-wider hover:underline focus:outline-none flex items-center gap-1"
+                >
+                  {isDescExpanded ? 'Show Less ▲' : 'Read More ▼'}
+                </button>
+              )}
+            </div>
 
             <div className="space-y-6">
                {/* Selection for Colors */}
-               <div className="space-y-3">
-                  <div className="flex justify-between items-end">
-                    <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">
-                      Color: <span className="text-brand-primary">{selectedColor || 'Select Color'}</span>
-                    </label>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {availableColors.map(color => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`px-4 py-2 border-2 rounded-full font-bold text-xs transition-all ${
-                          selectedColor === color
-                            ? 'border-brand-primary bg-brand-primary text-white shadow-float scale-105'
-                            : 'border-gray-200 text-brand-dark bg-white hover:border-brand-primary hover:text-brand-primary'
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
-                  </div>
-               </div>
+               {availableColors.length > 0 && (
+                 <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">
+                        Color: <span className="text-brand-primary">{selectedColor || 'Select Color'}</span>
+                      </label>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {availableColors.map(color => (
+                        <button
+                          key={color}
+                          onClick={() => setSelectedColor(color)}
+                          className={`px-4 py-2 border-2 rounded-full font-bold text-xs transition-all ${
+                            selectedColor === color
+                              ? 'border-brand-primary bg-brand-primary text-white shadow-float scale-105'
+                              : 'border-gray-200 text-brand-dark bg-white hover:border-brand-primary hover:text-brand-primary'
+                          }`}
+                        >
+                          {color}
+                        </button>
+                      ))}
+                    </div>
+                 </div>
+               )}
 
                {/* Selection for Sizes */}
-               <div className="space-y-3">
-                  <div className="flex justify-between items-end">
-                    <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Select Size (IN)</label>
-                    {error && <span className="text-red-500 text-[10px] font-bold uppercase animate-pulse">{error}</span>}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {availableSizes.map(size => (
-                      <button 
-                        key={size} 
-                        onClick={() => {
-                          setSelectedSize(size);
-                          setError('');
-                        }}
-                        className={`w-12 h-12 border-2 rounded-brand font-bold text-sm transition-all ${
-                          selectedSize === size 
-                            ? 'border-brand-primary bg-brand-primary text-white shadow-float scale-105' 
-                            : 'border-gray-100 text-brand-muted hover:border-brand-primary hover:text-brand-primary'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-               </div>
+               {availableSizes.length > 0 && (
+                 <div className="space-y-3">
+                    <div className="flex justify-between items-end">
+                      <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Select Size (IN)</label>
+                      {error && <span className="text-red-500 text-[10px] font-bold uppercase animate-pulse">{error}</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {availableSizes.map(size => (
+                        <button 
+                          key={size} 
+                          onClick={() => {
+                            setSelectedSize(size);
+                            setError('');
+                          }}
+                          className={`w-12 h-12 border-2 rounded-brand font-bold text-sm transition-all ${
+                            selectedSize === size 
+                              ? 'border-brand-primary bg-brand-primary text-white shadow-float scale-105' 
+                              : 'border-gray-100 text-brand-muted hover:border-brand-primary hover:text-brand-primary'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                 </div>
+               )}
 
                <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Button 
@@ -272,10 +339,10 @@ export function ProductDetailClient({
                       className="space-y-3"
                     >
                       {(product.features || [
-                        'Premium breathable fabric for max comfort',
-                        'Reinforced stitching for high-intensity use',
+                        'Premium breathable fabric engineered for max comfort',
+                        'Reinforced stitching for high-intensity athletic use',
                         'Anti-odor and moisture-wicking technology',
-                        'Ethically manufactured in India',
+                        'Ethically manufactured in Faridabad, Haryana, India',
                         'Modern athletic fit that contours the body'
                       ]).map((feat, i) => (
                         <li key={i} className="flex gap-3 text-brand-muted text-sm italic">
@@ -288,19 +355,13 @@ export function ProductDetailClient({
                     <motion.div 
                       initial={{ opacity: 0 }} 
                       animate={{ opacity: 1 }}
-                      className="bg-brand-surface rounded-brand-lg p-6"
+                      className="bg-brand-surface rounded-brand-lg p-6 border border-gray-100"
                     >
-                      <dl className="space-y-4 divide-y divide-gray-100">
-                        {Object.entries(product.specifications || {
-                          'Material': '88% Polyester, 12% Spandex',
-                          'Fit': 'Athletic / Slim Fit',
-                          'Care': 'Machine wash cold, tumble dry low',
-                          'Origin': 'Made in India',
-                          'Occasion': 'Gym, Running, Athletics'
-                        }).map(([key, val]) => (
-                          <div key={key} className="flex justify-between py-3">
+                      <dl className="space-y-4 divide-y divide-gray-200/60">
+                        {Object.entries(finalSpecsMap).map(([key, val]) => (
+                          <div key={key} className="flex justify-between items-center py-3">
                             <dt className="text-xs font-bold text-brand-muted uppercase tracking-widest">{key}</dt>
-                            <dd className="text-sm font-bold text-brand-dark">{val}</dd>
+                            <dd className="text-sm font-bold text-brand-dark text-right">{val}</dd>
                           </div>
                         ))}
                       </dl>
@@ -312,6 +373,92 @@ export function ProductDetailClient({
         </div>
       </div>
 
+      {/* Single Product Multiple Images Showcase Drawer */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <div className="fixed inset-0 z-[100] flex justify-end">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsDrawerOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative z-[101] w-full max-w-3xl bg-brand-dark text-white h-full shadow-2xl flex flex-col p-6 md:p-8"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-6 border-b border-white/10">
+                <div>
+                  <h3 className="text-xl font-black uppercase tracking-tight text-white">{product.name}</h3>
+                  <p className="text-xs text-brand-secondary font-bold uppercase tracking-widest mt-1">
+                    Image {drawerImageIndex + 1} of {product.images.length}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Main Showcase Image Display */}
+              <div className="flex-1 relative flex items-center justify-center my-6 rounded-brand-lg overflow-hidden bg-black/40 border border-white/10">
+                {product.images[drawerImageIndex] && (
+                  <Image
+                    src={product.images[drawerImageIndex]}
+                    alt={`${product.name} Showcase ${drawerImageIndex + 1}`}
+                    fill
+                    className="object-contain p-4"
+                  />
+                )}
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setDrawerImageIndex((prev) => (prev > 0 ? prev - 1 : product.images.length - 1))}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/70 hover:bg-brand-primary rounded-full flex items-center justify-center text-white transition-all shadow-lg"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={() => setDrawerImageIndex((prev) => (prev < product.images.length - 1 ? prev + 1 : 0))}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/70 hover:bg-brand-primary rounded-full flex items-center justify-center text-white transition-all shadow-lg"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Thumbnails Grid Strip */}
+              {product.images.length > 1 && (
+                <div className="pt-4 border-t border-white/10">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">All Images Showcase</p>
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    {product.images.map((img, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setDrawerImageIndex(i)}
+                        className={`relative w-20 h-20 flex-shrink-0 rounded-brand overflow-hidden border-2 transition-all ${
+                          drawerImageIndex === i ? 'border-brand-secondary scale-105 shadow-float' : 'border-white/20 opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        <Image src={img || ''} alt="" fill className="object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Related Products Gallery */}
       {relatedProducts.length > 0 && (
         <section className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-gray-100">
@@ -320,7 +467,7 @@ export function ProductDetailClient({
               <h2 className="text-3xl font-black text-brand-dark tracking-tight">You May Also Like</h2>
               <p className="text-brand-muted italic">Curated essentials for your athletic journey</p>
             </div>
-            <Link href="/products" className="text-sm font-bold text-brand-primary hover:underline flex items-center gap-1 group">
+            <Link href="/products" prefetch={false} className="text-sm font-bold text-brand-primary hover:underline flex items-center gap-1 group">
               View All Products <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>

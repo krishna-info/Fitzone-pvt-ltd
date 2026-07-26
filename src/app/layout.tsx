@@ -33,6 +33,7 @@ import { CookieConsent } from '@/components/ui/CookieConsent';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema';
 import WebsiteSchema from '@/components/seo/WebsiteSchema';
+import { ChunkErrorHandler } from '@/components/utils/ChunkErrorHandler';
 
 export default function RootLayout({
   children,
@@ -42,6 +43,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${montserrat.variable}`}>
       <body className="antialiased font-sans bg-brand-surface text-brand-dark min-h-screen flex flex-col">
+        <ChunkErrorHandler />
         <LocalBusinessSchema />
         <WebsiteSchema />
         <Navbar />
