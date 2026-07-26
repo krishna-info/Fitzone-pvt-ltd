@@ -44,32 +44,61 @@ export async function POST(req: Request) {
     const shipping = subtotal > 1000 ? 0 : 150;
     const total = subtotal + shipping;
 
-    // 3. Create Order in D1
     const db = getDb();
-    const orderId = crypto.randomUUID();
-
-    await db.prepare(`
-      INSERT INTO orders (
-        id, customer_name, customer_email, customer_phone, shipping_address, city, pincode, subtotal, shipping, total, status, payment_id, razorpay_order_id
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(
-      orderId, customerDetails.name, customerDetails.email, customerDetails.phone, customerDetails.address, customerDetails.city, customerDetails.pincode, subtotal, shipping, total, 'processing', razorpay_payment_id, razorpay_order_id
-    ).run();
-
-    // 4. Create Order Items
-    for (const item of items) {
-      await db.prepare(`
-        INSERT INTO order_items (id, order_id, product_id, product_name, quantity, price_at_purchase)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(crypto.randomUUID(), orderId, item.productId, item.name, item.quantity, item.price || 0).run();
+    if (!db) {
+      return NextResponse.json({ error: 'Database context unavailable' }, { status: 500 });
     }
 
-    // 5. Log Payment
-    await db.prepare(`
-      INSERT INTO payments (id, order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(crypto.randomUUID(), orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature, total, 'captured').run();
+    // 3. Idempotency Check
+    try {
+      const { results: existing } = await db.prepare(
+        'SELECT id FROM orders WHERE razorpay_order_id = ? OR payment_id = ?'
+      ).bind(razorpay_order_id, razorpay_payment_id).all();
+
+      if (existing && existing.length > 0) {
+        return NextResponse.json({ success: true, orderId: existing[0].id });
+      }
+    } catch (checkErr) {
+      console.warn('Idempotency check warning:', checkErr);
+    }
+
+    // 4. Build Atomic Batch Statements
+    const orderId = crypto.randomUUID();
+    const stmts: any[] = [];
+
+    stmts.push(
+      db.prepare(`
+        INSERT INTO orders (
+          id, customer_name, customer_email, customer_phone, shipping_address, city, pincode, subtotal, shipping, total, status, payment_id, razorpay_order_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        orderId, customerDetails.name, customerDetails.email, customerDetails.phone, customerDetails.address, customerDetails.city, customerDetails.pincode, subtotal, shipping, total, 'processing', razorpay_payment_id, razorpay_order_id
+      )
+    );
+
+    for (const item of items) {
+      stmts.push(
+        db.prepare(`
+          INSERT INTO order_items (id, order_id, product_id, product_name, quantity, price_at_purchase, size, color)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          crypto.randomUUID(), orderId, item.productId, item.name, item.quantity, item.price || 0, item.size || null, item.color || null
+        )
+      );
+    }
+
+    stmts.push(
+      db.prepare(`
+        INSERT INTO payments (id, order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        crypto.randomUUID(), orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature, total, 'captured'
+      )
+    );
+
+    // Execute single atomic transaction
+    await db.batch(stmts);
 
     return NextResponse.json({ success: true, orderId });
   } catch (error) {

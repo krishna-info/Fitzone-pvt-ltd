@@ -105,7 +105,8 @@ export default function ProductsClient({
                   <Pagination 
                     currentPage={currentPage} 
                     totalPages={totalPages} 
-                    basePath={currentCategory !== 'all' ? `/products?category=${currentCategory}` : '/products'} 
+                    basePath="/products"
+                    category={currentCategory}
                   />
                 </div>
               )}
@@ -119,9 +120,11 @@ export default function ProductsClient({
               <p className="text-brand-muted text-sm">
                 There are currently no active products listed in this category session. Check back soon or browse all categories.
               </p>
-              <Link href="/products" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-                View All Products
-              </Link>
+              {currentCategory !== 'all' && (
+                <Link href="/products" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                  View All Products
+                </Link>
+              )}
             </div>
           )}
         </div>

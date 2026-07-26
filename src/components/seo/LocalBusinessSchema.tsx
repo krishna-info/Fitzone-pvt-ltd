@@ -11,16 +11,16 @@ export default function LocalBusinessSchema() {
     "telephone": "+91 77422 31208",
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "P NO. 35B, SECTOR A, JODHPUR K.U.M. BHAGAT KI KOTHI, Rameshwar Nagar",
-      "addressLocality": "Jodhpur",
-      "addressRegion": "Rajasthan",
-      "postalCode": "342005",
+      "streetAddress": "Building No. 0, C/O RAVINDER, MOUJA ANAGPUR DAIRY, SARKARI SCHOOL",
+      "addressLocality": "Faridabad",
+      "addressRegion": "Haryana",
+      "postalCode": "121002",
       "addressCountry": "IN"
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": 26.2389,
-      "longitude": 73.0243
+      "latitude": 28.4089,
+      "longitude": 77.3178
     },
     "openingHoursSpecification": {
       "@type": "OpeningHoursSpecification",

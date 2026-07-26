@@ -146,7 +146,7 @@ export default async function OrderLookupPage({ params }: { params: { id: string
                      Refunds are processed to the original payment method or via UPI for COD orders.
                    </p>
                 </div>
-                <ReturnRequestModal orderId={order.id} isCOD={order.payment_method === 'COD'} />
+                <ReturnRequestModal orderId={order.id} isCOD={!order.payment_id} />
               </div>
             ) : order.return_status && order.return_status !== 'none' ? (
               <div className="pt-8 p-10 bg-amber-50 border border-amber-100 rounded-3xl text-center space-y-4">

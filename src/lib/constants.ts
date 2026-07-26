@@ -3,9 +3,10 @@ export const CONTACT_EMAIL = 'fitzoneapparels@gmail.com';
 export const CONTACT_PHONE = '+91 94619 09281';
 export const LEGAL_NAME = 'FITZONE APPARELS PRIVATE LIMITED';
 export const GSTIN = '08AAGCF2150D1Z2';
-export const BUSINESS_ADDRESS = 'P NO. 35B, SECTOR A, JODHPUR K.U.M. BHAGAT KI KOTHI, Rameshwar Nagar, Jodhpur, Rajasthan, 342005';
-export const CITY = 'Jodhpur';
-export const STATE = 'Rajasthan';
+export const BUSINESS_ADDRESS = 'Building No. 0, C/O RAVINDER, Mouja Anagpur Dairy, Near Sarkari School, Faridabad, Haryana, 121002';
+export const CITY = 'Faridabad';
+export const STATE = 'Haryana';
+export const PINCODE = '121002';
 
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },

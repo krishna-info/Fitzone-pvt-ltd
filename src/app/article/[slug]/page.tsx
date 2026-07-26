@@ -12,14 +12,17 @@ interface Props {
 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const db = getDb();
+  if (!db) {
+    return { title: 'FitZone Insights' };
+  }
+
   let post: any = null;
   try {
-    const db = getDb();
-    if (db) {
-      post = await db.prepare('SELECT title, excerpt, image FROM posts WHERE slug = ?').bind(params.slug).first();
-    }
+    post = await db.prepare('SELECT title, excerpt, image FROM posts WHERE slug = ?').bind(params.slug).first();
   } catch (error) {
     console.error('Failed to generate metadata for blog post:', error);
+    throw error;
   }
 
   if (!post) return { title: 'Post Not Found' };
@@ -39,31 +42,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const dynamic = 'force-dynamic';
 
 export default async function BlogPostPage({ params }: Props) {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Database context unavailable');
+  }
+
   let post: any = null;
   let recentPosts: any[] = [];
   let promoProducts: any[] = [];
 
-  try {
-    const db = getDb();
-    if (db) {
-      post = await db.prepare('SELECT * FROM posts WHERE slug = ?').bind(params.slug).first();
-
-      if (post) {
-        const { results: rPosts } = await db.prepare(
-          'SELECT id, slug, title, image, published_at FROM posts WHERE is_published = 1 AND slug != ? ORDER BY published_at DESC LIMIT 3'
-        ).bind(params.slug).all();
-        recentPosts = rPosts || [];
-
-        const { results: pProducts } = await db.prepare('SELECT * FROM products WHERE is_active = 1').all();
-        promoProducts = pProducts || [];
-      }
-    }
-  } catch (error) {
-    console.error('Failed to fetch blog post details:', error);
-  }
+  post = await db.prepare('SELECT * FROM posts WHERE slug = ?').bind(params.slug).first();
 
   if (!post) {
     notFound();
+  }
+
+  try {
+    const { results: rPosts } = await db.prepare(
+      'SELECT id, slug, title, image, published_at FROM posts WHERE is_published = 1 AND slug != ? ORDER BY published_at DESC LIMIT 3'
+    ).bind(params.slug).all();
+    recentPosts = rPosts || [];
+
+    const { results: pProducts } = await db.prepare('SELECT * FROM products WHERE is_active = 1').all();
+    promoProducts = pProducts || [];
+  } catch (error) {
+    console.error('Failed to fetch secondary post details:', error);
   }
 
   // Determine which product to promote

@@ -14,7 +14,7 @@ export default function GalleryClient({ images = [] }: { images?: GalleryImage[]
   const safeImages = images || [];
 
   // Extract unique categories from db + defaults
-  const categoriesSet = new Set(['All']);
+  const categoriesSet = new Set(DEFAULT_CATEGORIES);
   safeImages.forEach(img => {
     if (img?.category) categoriesSet.add(img.category);
   });

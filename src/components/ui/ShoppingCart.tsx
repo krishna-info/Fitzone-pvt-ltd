@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, X, Plus, Minus, MessageCircle, Trash2 } from 'lucide-react';
 import Image from 'next/image';
-import { useCartStore } from '@/store/cartStore';
+import { useCartStore, getVariantKey } from '@/store/cartStore';
 import { Button } from '@/components/ui/Button';
 import { WHATSAPP_NUMBER } from '@/lib/constants';
 
@@ -24,7 +24,7 @@ export function ShoppingCart() {
 
   const handleSendEnquiry = () => {
     const lines = items.map(
-      item => `• ${item.name} (${item.category}) — Qty: ${item.quantity}`
+      item => `• ${item.name} (${item.category})${item.size ? ` - Size: ${item.size}` : ''}${item.color ? ` - Color: ${item.color}` : ''} — Qty: ${item.quantity}`
     );
     const message = encodeURIComponent(
       `Hi FitZone, I'd like to enquire about a BULK ORDER for:\n\n${lines.join('\n')}\n\nPlease share availability and pricing. Thank you!`
@@ -103,52 +103,57 @@ export function ShoppingCart() {
                   <p className="text-sm text-gray-400">Discover our collection and bring home the best of FitZone.</p>
                 </div>
               ) : (
-                items.map(item => (
-                  <div key={item.productId} className="bg-brand-surface rounded-brand p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                       <div className="flex gap-3">
-                         {item.imageUrl && (
-                           <div className="w-12 h-12 rounded bg-gray-100 overflow-hidden relative flex-shrink-0">
-                             <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                items.map(item => {
+                  const key = getVariantKey(item);
+                  return (
+                    <div key={key} className="bg-brand-surface rounded-brand p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                         <div className="flex gap-3">
+                           {item.imageUrl && (
+                             <div className="w-12 h-12 rounded bg-gray-100 overflow-hidden relative flex-shrink-0">
+                               <Image src={item.imageUrl} alt={item.name} fill className="object-cover" />
+                             </div>
+                           )}
+                           <div>
+                            <p className="font-semibold text-brand-dark text-sm leading-tight">{item.name}</p>
+                            <p className="text-[10px] text-brand-muted uppercase tracking-wider mt-1">
+                              {item.category} {(item.size || item.color) ? `• ${[item.size, item.color].filter(Boolean).join(' / ')}` : ''}
+                            </p>
+                            <p className="text-sm font-bold text-brand-primary mt-1">
+                              {item.price ? `₹${item.price.toLocaleString()}` : 'Price on Enquiry'}
+                            </p>
                            </div>
-                         )}
-                         <div>
-                          <p className="font-semibold text-brand-dark text-sm leading-tight">{item.name}</p>
-                          <p className="text-[10px] text-brand-muted uppercase tracking-wider mt-1">{item.category}</p>
-                          <p className="text-sm font-bold text-brand-primary mt-1">
-                            {item.price ? `₹${item.price.toLocaleString()}` : 'Price on Enquiry'}
-                          </p>
                          </div>
-                       </div>
-                      <button
-                        onClick={() => removeItem(item.productId)}
-                        className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
                         <button
-                          onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                          className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:border-brand-primary transition-colors"
+                          onClick={() => removeItem(item)}
+                          className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
                         >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="w-6 text-center font-semibold text-sm">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                          className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:border-brand-primary transition-colors"
-                        >
-                          <Plus className="w-3 h-3" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                      <p className="text-sm font-bold text-brand-dark">
-                        {item.price ? `₹${(item.price * item.quantity).toLocaleString()}` : '-'}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(item, item.quantity - 1)}
+                            className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:border-brand-primary transition-colors"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="w-6 text-center font-semibold text-sm">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item, item.quantity + 1)}
+                            className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:border-brand-primary transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-bold text-brand-dark">
+                          {item.price ? `₹${(item.price * item.quantity).toLocaleString()}` : '-'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 

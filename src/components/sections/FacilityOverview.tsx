@@ -16,7 +16,7 @@ export function FacilityOverview() {
           >
             <h2 className="text-3xl md:text-4xl font-bold text-brand-dark">Built for <span className="text-brand-primary">Scale & Precision.</span></h2>
             <p className="text-lg text-brand-muted leading-relaxed">
-              Our Jodhpur-based manufacturing facility is equipped with the latest garment-making machinery, specialized for high-performance athletic wear. We maintain strict environmental and safety standards to ensure a sustainable production environment.
+              Our Faridabad-based manufacturing facility is equipped with the latest garment-making machinery, specialized for high-performance athletic wear. We maintain strict environmental and safety standards to ensure a sustainable production environment.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
                <div className="p-4 bg-brand-surface rounded-brand border border-gray-100">

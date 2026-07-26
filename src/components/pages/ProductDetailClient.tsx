@@ -19,13 +19,13 @@ export function ProductDetailClient({
   product: Product;
   relatedProducts?: Product[];
 }) {
-  const availableSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
-  const availableColors = (product.colors && product.colors.length > 0) ? product.colors : ['Black', 'Navy', 'Heather Gray', 'White'];
+  const availableSizes = product.sizes || [];
+  const availableColors = product.colors || [];
 
   const { addItem, openCart } = useCartStore();
   const [added, setAdded] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0] || '');
-  const [selectedColor, setSelectedColor] = useState<string>(availableColors[0] || '');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
   const [error, setError] = useState<string>('');
 
   const [emblaRef, emblaApi] = useEmblaCarousel();
@@ -33,8 +33,12 @@ export function ProductDetailClient({
   const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      setError('Please select a size first');
+    if (availableSizes.length > 0 && !selectedSize) {
+      setError('Please select a size');
+      return;
+    }
+    if (availableColors.length > 0 && !selectedColor) {
+      setError('Please select a color');
       return;
     }
     setError('');

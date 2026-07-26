@@ -13,12 +13,21 @@ export interface CartItem {
   color?: string;
 }
 
+export interface CartVariantId {
+  productId: string;
+  size?: string;
+  color?: string;
+}
+
+export const getVariantKey = (item: CartVariantId) =>
+  `${item.productId}::${item.size || ''}::${item.color || ''}`;
+
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
   addItem: (item: Omit<CartItem, 'quantity'>) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (target: CartVariantId | string) => void;
+  updateQuantity: (target: CartVariantId | string, quantity: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -30,13 +39,12 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isOpen: false,
       addItem: (item) => {
-        const existing = get().items.find(
-          i => i.productId === item.productId && i.size === item.size && i.color === item.color
-        );
+        const itemKey = getVariantKey(item);
+        const existing = get().items.find(i => getVariantKey(i) === itemKey);
         if (existing) {
           set(state => ({
             items: state.items.map(i =>
-              (i.productId === item.productId && i.size === item.size && i.color === item.color)
+              getVariantKey(i) === itemKey
                 ? { ...i, quantity: i.quantity + 1 }
                 : i
             ),
@@ -45,16 +53,21 @@ export const useCartStore = create<CartStore>()(
           set(state => ({ items: [...state.items, { ...item, quantity: 1 }] }));
         }
       },
-      removeItem: (productId) =>
-        set(state => ({ items: state.items.filter(i => i.productId !== productId) })),
-      updateQuantity: (productId, quantity) => {
+      removeItem: (target) => {
+        const targetKey = typeof target === 'string' ? target : getVariantKey(target);
+        set(state => ({
+          items: state.items.filter(i => getVariantKey(i) !== targetKey && i.productId !== target)
+        }));
+      },
+      updateQuantity: (target, quantity) => {
+        const targetKey = typeof target === 'string' ? target : getVariantKey(target);
         if (quantity < 1) {
-          get().removeItem(productId);
+          get().removeItem(target);
           return;
         }
         set(state => ({
           items: state.items.map(i =>
-            i.productId === productId ? { ...i, quantity } : i
+            (getVariantKey(i) === targetKey || i.productId === target) ? { ...i, quantity } : i
           ),
         }));
       },

@@ -42,13 +42,8 @@ export const parseProduct = (p: any): Product => {
     sizes = [];
   }
 
-  // Sensible defaults if not explicitly set
-  if (!colors || colors.length === 0) {
-    colors = ['Black', 'Navy', 'Heather Gray', 'White'];
-  }
-  if (!sizes || sizes.length === 0) {
-    sizes = ['S', 'M', 'L', 'XL', 'XXL'];
-  }
+  colors = colors || [];
+  sizes = sizes || [];
 
   // Clean hidden internal keys from public specifications map
   const cleanSpecs = { ...specifications };
