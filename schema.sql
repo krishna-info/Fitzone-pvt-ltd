@@ -36,6 +36,9 @@ CREATE TABLE IF NOT EXISTS posts (
     author_name TEXT,
     author_role TEXT,
     author_avatar TEXT,
+    author_slug TEXT,
+    promo_product_slug TEXT,
+    promo_category_slug TEXT,
     is_published INTEGER DEFAULT 0,
     published_at DATETIME,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -53,11 +56,14 @@ CREATE TABLE IF NOT EXISTS products (
     price_inr REAL,
     moq INTEGER NOT NULL,
     images TEXT NOT NULL, -- Stored as JSON array string
+    colors TEXT, -- Stored as JSON array string (e.g. ["Black", "Navy", "White"])
+    sizes TEXT, -- Stored as JSON array string (e.g. ["S", "M", "L", "XL", "XXL"])
     is_enquiry_only INTEGER DEFAULT 0,
     is_active INTEGER DEFAULT 1,
     features TEXT, -- Stored as JSON array string
     specifications TEXT, -- Stored as JSON object string
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 5. Orders Table
@@ -81,7 +87,8 @@ CREATE TABLE IF NOT EXISTS orders (
     refund_upi_id TEXT,
     return_requested_at DATETIME,
     refund_processed_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 6. Order Items Table
@@ -92,6 +99,8 @@ CREATE TABLE IF NOT EXISTS order_items (
     product_name TEXT NOT NULL,
     quantity INTEGER NOT NULL,
     price_at_purchase REAL NOT NULL,
+    size TEXT,
+    color TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
@@ -119,3 +128,14 @@ CREATE TABLE IF NOT EXISTS gallery_images (
     image_url TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Performance Indexes for Cloudflare D1
+CREATE INDEX IF NOT EXISTS idx_products_category_slug ON products(category_slug);
+CREATE INDEX IF NOT EXISTS idx_products_slug ON products(slug);
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active, created_at);
+CREATE INDEX IF NOT EXISTS idx_posts_slug ON posts(slug);
+CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(is_published, published_at);
+CREATE INDEX IF NOT EXISTS idx_orders_customer_email ON orders(customer_email);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_gallery_created_at ON gallery_images(created_at);

@@ -4,13 +4,14 @@ import { getDb } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 export async function getUsers() {
-  const db = getDb();
-  
   try {
+    const db = getDb();
+    if (!db) return [];
     const { results } = await db.prepare('SELECT * FROM profiles ORDER BY created_at DESC').all();
-    return results;
+    return results || [];
   } catch (error: any) {
-    throw new Error(error.message);
+    console.error('Error fetching users:', error?.message);
+    return [];
   }
 }
 

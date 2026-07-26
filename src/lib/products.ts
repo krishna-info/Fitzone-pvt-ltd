@@ -3,14 +3,69 @@ import { Product } from './product-types';
 
 export * from './product-types';
 
-const parseImages = (p: any) => ({
-  ...p,
-  images: typeof p.images === 'string' ? JSON.parse(p.images) : (p.images || [])
-});
+export const parseProduct = (p: any): Product => {
+  if (!p) return p;
 
-// Fetch all active products from Supabase with pagination
+  let images: string[] = [];
+  try {
+    images = typeof p.images === 'string' ? JSON.parse(p.images) : (p.images || []);
+  } catch {
+    images = [];
+  }
+
+  let specifications: Record<string, string> = {};
+  try {
+    specifications = typeof p.specifications === 'string' ? JSON.parse(p.specifications) : (p.specifications || {});
+  } catch {
+    specifications = {};
+  }
+
+  let colors: string[] = [];
+  try {
+    if (p.colors) {
+      colors = typeof p.colors === 'string' ? JSON.parse(p.colors) : p.colors;
+    } else if (specifications._colors) {
+      colors = JSON.parse(specifications._colors);
+    }
+  } catch {
+    colors = [];
+  }
+
+  let sizes: string[] = [];
+  try {
+    if (p.sizes) {
+      sizes = typeof p.sizes === 'string' ? JSON.parse(p.sizes) : p.sizes;
+    } else if (specifications._sizes) {
+      sizes = JSON.parse(specifications._sizes);
+    }
+  } catch {
+    sizes = [];
+  }
+
+  // Sensible defaults if not explicitly set
+  if (!colors || colors.length === 0) {
+    colors = ['Black', 'Navy', 'Heather Gray', 'White'];
+  }
+  if (!sizes || sizes.length === 0) {
+    sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  }
+
+  // Clean hidden internal keys from public specifications map
+  const cleanSpecs = { ...specifications };
+  delete cleanSpecs._colors;
+  delete cleanSpecs._sizes;
+
+  return {
+    ...p,
+    images,
+    specifications: cleanSpecs,
+    colors,
+    sizes
+  };
+};
+
+// Fetch all active products with pagination
 export async function getAllProducts(limit?: number, offset?: number): Promise<Product[]> {
-  const db = getDb();
   let queryStr = 'SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC';
   
   if (limit) {
@@ -21,8 +76,10 @@ export async function getAllProducts(limit?: number, offset?: number): Promise<P
   }
 
   try {
+    const db = getDb();
+    if (!db) return [];
     const { results } = await db.prepare(queryStr).all();
-    return results.map(parseImages);
+    return (results || []).map(parseProduct);
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -31,7 +88,6 @@ export async function getAllProducts(limit?: number, offset?: number): Promise<P
 
 // Fetch products by category slug with pagination
 export async function getProductsByCategory(categorySlug: string, limit?: number, offset?: number): Promise<Product[]> {
-  const db = getDb();
   let queryStr = 'SELECT * FROM products WHERE category_slug = ? AND is_active = 1 ORDER BY created_at DESC';
   
   if (limit) {
@@ -42,8 +98,10 @@ export async function getProductsByCategory(categorySlug: string, limit?: number
   }
 
   try {
+    const db = getDb();
+    if (!db) return [];
     const { results } = await db.prepare(queryStr).bind(categorySlug).all();
-    return results.map(parseImages);
+    return (results || []).map(parseProduct);
   } catch (error) {
     console.error('Error fetching products by category:', error);
     return [];
@@ -52,11 +110,12 @@ export async function getProductsByCategory(categorySlug: string, limit?: number
 
 // Fetch latest products for homepage gallery
 export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
-  const db = getDb();
   try {
+    const db = getDb();
+    if (!db) return [];
     const { results } = await db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT ?')
       .bind(limit).all();
-    return results.map(parseImages);
+    return (results || []).map(parseProduct);
   } catch (error) {
     console.error('Error fetching latest products:', error);
     return [];
@@ -65,12 +124,14 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
 
 // Fetch a single product by slug
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const db = getDb();
   try {
+    const db = getDb();
+    if (!db) return null;
     const product = await db.prepare('SELECT * FROM products WHERE slug = ?')
       .bind(slug).first();
-    return product ? parseImages(product) : null;
+    return product ? parseProduct(product) : null;
   } catch (error) {
+    console.error('Error fetching product by slug:', error);
     return null;
   }
 }

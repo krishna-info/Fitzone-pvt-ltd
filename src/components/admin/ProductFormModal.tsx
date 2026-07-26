@@ -16,10 +16,47 @@ export function ProductFormModal({ product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [existingImages, setExistingImages] = useState<string[]>(product?.images || []);
+  const [colors, setColors] = useState<string[]>(product?.colors || ['Black', 'Navy', 'Heather Gray', 'White']);
+  const [sizes, setSizes] = useState<string[]>(product?.sizes || ['S', 'M', 'L', 'XL', 'XXL']);
+  const [newColor, setNewColor] = useState('');
+  const [newSize, setNewSize] = useState('');
+
   const isEdit = !!product;
+
+  React.useEffect(() => {
+    if (open) {
+      setExistingImages(product?.images || []);
+      setColors(product?.colors || ['Black', 'Navy', 'Heather Gray', 'White']);
+      setSizes(product?.sizes || ['S', 'M', 'L', 'XL', 'XXL']);
+      setNewColor('');
+      setNewSize('');
+    }
+  }, [open, product]);
 
   const removeImage = (indexToRemove: number) => {
     setExistingImages(existingImages.filter((_, i) => i !== indexToRemove));
+  };
+
+  const addColor = () => {
+    if (newColor.trim() && !colors.includes(newColor.trim())) {
+      setColors([...colors, newColor.trim()]);
+      setNewColor('');
+    }
+  };
+
+  const removeColor = (colorToRemove: string) => {
+    setColors(colors.filter(c => c !== colorToRemove));
+  };
+
+  const addSize = () => {
+    if (newSize.trim() && !sizes.includes(newSize.trim())) {
+      setSizes([...sizes, newSize.trim()]);
+      setNewSize('');
+    }
+  };
+
+  const removeSize = (sizeToRemove: string) => {
+    setSizes(sizes.filter(s => s !== sizeToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,6 +83,8 @@ export function ProductFormModal({ product }: ProductFormProps) {
 
       const validImages = existingImages.filter(img => img.trim() !== '');
       formData.append('existing_images', JSON.stringify(validImages));
+      formData.append('colors', JSON.stringify(colors));
+      formData.append('sizes', JSON.stringify(sizes));
       
       if (isEdit) {
         await updateProduct(formData);
@@ -223,7 +262,55 @@ export function ProductFormModal({ product }: ProductFormProps) {
           </div>
         </div>
 
-        <div className="space-y-2">
+        {/* Available Colors Manager */}
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest block">Available Colors</label>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {colors.map(color => (
+              <span key={color} className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-surface border border-gray-200 text-brand-dark text-xs font-bold rounded-full">
+                {color}
+                <button type="button" onClick={() => removeColor(color)} className="text-gray-400 hover:text-red-500 font-bold ml-1">✕</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              value={newColor}
+              onChange={(e) => setNewColor(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addColor(); } }}
+              placeholder="Add color (e.g. Navy Blue)..."
+              className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-xs"
+            />
+            <Button type="button" variant="outline" size="sm" onClick={addColor}>+ Add Color</Button>
+          </div>
+        </div>
+
+        {/* Available Sizes Manager */}
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest block">Available Sizes</label>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {sizes.map(size => (
+              <span key={size} className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-xs font-bold rounded-full">
+                {size}
+                <button type="button" onClick={() => removeSize(size)} className="text-brand-primary/60 hover:text-red-500 font-bold ml-1">✕</button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              value={newSize}
+              onChange={(e) => setNewSize(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSize(); } }}
+              placeholder="Add size (e.g. 3XL)..."
+              className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-xs"
+            />
+            <Button type="button" variant="outline" size="sm" onClick={addSize}>+ Add Size</Button>
+          </div>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t border-gray-100">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Description</label>
           <textarea 
             name="description" 

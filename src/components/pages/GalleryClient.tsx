@@ -7,18 +7,22 @@ import type { GalleryImage } from '@/lib/db';
 
 const DEFAULT_CATEGORIES = ['All', 'Manufacturing', 'Products', 'Facility'];
 
-export default function GalleryClient({ images }: { images: GalleryImage[] }) {
+export default function GalleryClient({ images = [] }: { images?: GalleryImage[] }) {
   const [filter, setFilter] = useState('All');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
+  const safeImages = images || [];
+
   // Extract unique categories from db + defaults
   const categoriesSet = new Set(['All']);
-  images.forEach(img => categoriesSet.add(img.category));
+  safeImages.forEach(img => {
+    if (img?.category) categoriesSet.add(img.category);
+  });
   const CATEGORIES = Array.from(categoriesSet);
 
   const filteredImages = filter === 'All' 
-    ? images 
-    : images.filter(img => img.category === filter);
+    ? safeImages 
+    : safeImages.filter(img => img?.category === filter);
 
   return (
     <div className="bg-white min-h-screen">
@@ -52,41 +56,47 @@ export default function GalleryClient({ images }: { images: GalleryImage[] }) {
       {/* Grid */}
       <section className="pb-24">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-             layout
-             className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6"
-          >
-            <AnimatePresence mode="popLayout">
-              {filteredImages.map((img) => (
-                <motion.div
-                  key={img.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.3 }}
-                  className="break-inside-avoid"
-                >
-                  <div 
-                    className="relative group cursor-pointer rounded-brand-lg overflow-hidden border border-gray-100 shadow-card"
-                    onClick={() => setSelectedImage(img)}
+          {filteredImages.length > 0 ? (
+            <motion.div 
+               layout
+               className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredImages.map((img) => (
+                  <motion.div
+                    key={img.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                    className="break-inside-avoid"
                   >
-                    <Image 
-                      src={img.image_url}
-                      alt={img.title}
-                      width={600}
-                      height={800}
-                      className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex flex-col justify-end">
-                       <span className="text-brand-secondary text-xs uppercase font-bold tracking-widest">{img.category}</span>
-                       <h3 className="text-white font-bold">{img.title}</h3>
+                    <div 
+                      className="relative group cursor-pointer rounded-brand-lg overflow-hidden border border-gray-100 shadow-card"
+                      onClick={() => setSelectedImage(img)}
+                    >
+                      <Image 
+                        src={img.image_url}
+                        alt={img.title}
+                        width={600}
+                        height={800}
+                        className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-6 flex flex-col justify-end">
+                         <span className="text-brand-secondary text-xs uppercase font-bold tracking-widest">{img.category}</span>
+                         <h3 className="text-white font-bold">{img.title}</h3>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            <div className="py-20 text-center text-brand-muted">
+              <p className="text-xl font-medium">No images found in this gallery category.</p>
+            </div>
+          )}
         </div>
       </section>
 

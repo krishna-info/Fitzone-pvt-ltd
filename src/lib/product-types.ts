@@ -12,6 +12,8 @@ export interface Product {
   is_active: boolean;
   features?: string[];
   specifications?: Record<string, string>;
+  colors?: string[];
+  sizes?: string[];
 }
 
 export interface ProductCategory {

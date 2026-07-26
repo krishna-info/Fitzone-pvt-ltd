@@ -102,7 +102,7 @@ export default async function PaymentsPage() {
                         </div>
                       </td>
                       <td className="px-8 py-6">
-                        <p className="text-lg font-black text-brand-dark">₹{(payment.amount / 100).toLocaleString()}</p>
+                        <p className="text-lg font-black text-brand-dark">₹{(payment.amount || 0).toLocaleString()}</p>
                       </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-2">

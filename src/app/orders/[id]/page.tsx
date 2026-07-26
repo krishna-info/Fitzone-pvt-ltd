@@ -11,29 +11,40 @@ export const metadata: Metadata = {
 };
 
 
-export default async function OrderLookupPage({ params }: { params: { id: string } }) {
-  const db = getDb();
+export const dynamic = 'force-dynamic';
 
-  const order = await db.prepare('SELECT * FROM orders WHERE id = ?').bind(params.id).first();
+export default async function OrderLookupPage({ params }: { params: { id: string } }) {
+  let order: any = null;
+
+  try {
+    const db = getDb();
+    if (db) {
+      order = await db.prepare('SELECT * FROM orders WHERE id = ?').bind(params.id).first();
+
+      if (order) {
+        const { results: items } = await db.prepare(`
+          SELECT oi.*, p.name as product_name, p.images as product_images 
+          FROM order_items oi 
+          LEFT JOIN products p ON oi.product_id = p.id 
+          WHERE oi.order_id = ?
+        `).bind(params.id).all();
+
+        order.order_items = (items || []).map((item: any) => ({
+          ...item,
+          products: {
+            name: item.product_name || item.product_id,
+            images: typeof item.product_images === 'string' ? JSON.parse(item.product_images) : (item.product_images || [])
+          }
+        }));
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch order details:', error);
+  }
 
   if (!order) {
     notFound();
   }
-
-  const { results: items } = await db.prepare(`
-    SELECT oi.*, p.name as product_name, p.images as product_images 
-    FROM order_items oi 
-    JOIN products p ON oi.product_id = p.id 
-    WHERE oi.order_id = ?
-  `).bind(params.id).all();
-
-  order.order_items = items.map((item: any) => ({
-    ...item,
-    products: {
-      name: item.product_name,
-      images: typeof item.product_images === 'string' ? JSON.parse(item.product_images) : (item.product_images || [])
-    }
-  }));
 
   const isRefundable = order.status === 'delivered' && 
                        (!order.return_status || order.return_status === 'none');
@@ -87,7 +98,7 @@ export default async function OrderLookupPage({ params }: { params: { id: string
             <div className="space-y-4 pt-4">
                <h3 className="text-sm font-black text-brand-dark uppercase tracking-widest border-b border-gray-50 pb-4">Order Items</h3>
                <div className="divide-y divide-gray-50">
-                  {order.order_items.map((item: { id: string; products: { name: string; images: string[] }; size?: string; quantity: number; price_at_time: number }) => (
+                  {(order.order_items || []).map((item: { id: string; products: { name: string; images: string[] }; size?: string; quantity: number; price_at_purchase: number }) => (
                     <div key={item.id} className="py-4 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <div className="w-16 h-16 bg-gray-50 rounded-xl overflow-hidden relative border border-gray-100 text-center">
@@ -103,7 +114,7 @@ export default async function OrderLookupPage({ params }: { params: { id: string
                            <p className="text-xs text-brand-muted">Size: {item.size || 'Standard'} × {item.quantity}</p>
                          </div>
                       </div>
-                      <p className="font-black text-brand-dark text-right">₹{item.price_at_time.toLocaleString()}</p>
+                      <p className="font-black text-brand-dark text-right">₹{(item.price_at_purchase || 0).toLocaleString()}</p>
                     </div>
                   ))}
                </div>
@@ -114,12 +125,12 @@ export default async function OrderLookupPage({ params }: { params: { id: string
                <div className="flex justify-between items-center">
                  <span className="text-brand-muted text-sm font-bold">Payment Method</span>
                  <span className="text-brand-dark text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                   <CreditCard className="w-4 h-4 text-brand-primary" /> {order.payment_method}
+                   <CreditCard className="w-4 h-4 text-brand-primary" /> {order.payment_id ? 'Razorpay' : 'COD'}
                  </span>
                </div>
                <div className="flex justify-between items-center pt-4 border-t border-brand-primary/10">
                  <span className="text-lg font-black text-brand-dark">Order Total</span>
-                 <span className="text-2xl font-black text-brand-primary tracking-tight">₹{order.total_amount.toLocaleString()}</span>
+                 <span className="text-2xl font-black text-brand-primary tracking-tight">₹{(order.total || 0).toLocaleString()}</span>
                </div>
             </div>
 

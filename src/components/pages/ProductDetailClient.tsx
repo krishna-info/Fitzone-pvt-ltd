@@ -19,9 +19,13 @@ export function ProductDetailClient({
   product: Product;
   relatedProducts?: Product[];
 }) {
+  const availableSizes = (product.sizes && product.sizes.length > 0) ? product.sizes : ['S', 'M', 'L', 'XL', 'XXL'];
+  const availableColors = (product.colors && product.colors.length > 0) ? product.colors : ['Black', 'Navy', 'Heather Gray', 'White'];
+
   const { addItem, openCart } = useCartStore();
   const [added, setAdded] = useState(false);
-  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>(availableSizes[0] || '');
+  const [selectedColor, setSelectedColor] = useState<string>(availableColors[0] || '');
   const [error, setError] = useState<string>('');
 
   const [emblaRef, emblaApi] = useEmblaCarousel();
@@ -41,6 +45,7 @@ export function ProductDetailClient({
       imageUrl: product.images[0],
       isEnquiryOnly: product.is_enquiry_only,
       size: selectedSize,
+      color: selectedColor,
       category: product.category_slug
     });
     setAdded(true);
@@ -164,15 +169,39 @@ export function ProductDetailClient({
 
             <p className="text-brand-muted leading-relaxed text-lg">{product.description}</p>
 
-            <div className="space-y-4">
-               {/* Selection for Sizes (Standard B2C UI) */}
+            <div className="space-y-6">
+               {/* Selection for Colors */}
+               <div className="space-y-3">
+                  <div className="flex justify-between items-end">
+                    <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">
+                      Color: <span className="text-brand-primary">{selectedColor || 'Select Color'}</span>
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {availableColors.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`px-4 py-2 border-2 rounded-full font-bold text-xs transition-all ${
+                          selectedColor === color
+                            ? 'border-brand-primary bg-brand-primary text-white shadow-float scale-105'
+                            : 'border-gray-200 text-brand-dark bg-white hover:border-brand-primary hover:text-brand-primary'
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+               </div>
+
+               {/* Selection for Sizes */}
                <div className="space-y-3">
                   <div className="flex justify-between items-end">
                     <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Select Size (IN)</label>
                     {error && <span className="text-red-500 text-[10px] font-bold uppercase animate-pulse">{error}</span>}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {['S', 'M', 'L', 'XL', 'XXL'].map(size => (
+                    {availableSizes.map(size => (
                       <button 
                         key={size} 
                         onClick={() => {

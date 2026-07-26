@@ -46,33 +46,32 @@ export async function POST(req: Request) {
 
     // 3. Create Order in D1
     const db = getDb();
-    const { results: orderResults } = await db.prepare(`
-      INSERT INTO orders (
-        customer_name, customer_email, customer_phone, shipping_address, city, pincode, subtotal, shipping, total, status, payment_id, razorpay_order_id
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      RETURNING *
-    `).bind(
-      customerDetails.name, customerDetails.email, customerDetails.phone, customerDetails.address, customerDetails.city, customerDetails.pincode, subtotal, shipping, total, 'processing', razorpay_payment_id, razorpay_order_id
-    ).all();
+    const orderId = crypto.randomUUID();
 
-    const order = orderResults[0];
+    await db.prepare(`
+      INSERT INTO orders (
+        id, customer_name, customer_email, customer_phone, shipping_address, city, pincode, subtotal, shipping, total, status, payment_id, razorpay_order_id
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      orderId, customerDetails.name, customerDetails.email, customerDetails.phone, customerDetails.address, customerDetails.city, customerDetails.pincode, subtotal, shipping, total, 'processing', razorpay_payment_id, razorpay_order_id
+    ).run();
 
     // 4. Create Order Items
     for (const item of items) {
       await db.prepare(`
-        INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_purchase)
-        VALUES (?, ?, ?, ?, ?)
-      `).bind(order.id, item.productId, item.name, item.quantity, item.price || 0).run();
+        INSERT INTO order_items (id, order_id, product_id, product_name, quantity, price_at_purchase)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(crypto.randomUUID(), orderId, item.productId, item.name, item.quantity, item.price || 0).run();
     }
 
     // 5. Log Payment
     await db.prepare(`
-      INSERT INTO payments (order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, status)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(order.id, razorpay_order_id, razorpay_payment_id, razorpay_signature, total, 'captured').run();
+      INSERT INTO payments (id, order_id, razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(crypto.randomUUID(), orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature, total, 'captured').run();
 
-    return NextResponse.json({ success: true, orderId: order.id });
+    return NextResponse.json({ success: true, orderId });
   } catch (error) {
     console.error('Verification Error:', error);
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 });

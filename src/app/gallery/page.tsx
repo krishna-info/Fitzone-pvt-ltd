@@ -9,12 +9,23 @@ export const metadata: Metadata = {
 
 export const revalidate = 60; // Revalidate every minute
 
+export const dynamic = 'force-dynamic';
+
 export default async function GalleryPage() {
-  const db = getDb();
-  
-  const { results: images } = (await db
-    .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC')
-    .all()) as { results: GalleryImage[] };
-    
+  let images: GalleryImage[] = [];
+
+  try {
+    const db = getDb();
+    if (db) {
+      const { results } = (await db
+        .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC')
+        .all()) as { results: GalleryImage[] };
+      images = results || [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch gallery images:', error);
+  }
+
   return <GalleryClient images={images} />;
 }
+
