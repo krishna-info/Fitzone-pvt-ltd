@@ -72,6 +72,9 @@ async function generateUniqueSlug(db: any, rawSlug: string, name: string, curren
 
 export async function updateProduct(formData: FormData) {
   const db = getDb();
+  if (!db) {
+    throw new Error('Database connection unavailable.');
+  }
 
   const id = formData.get('id') as string;
   const name = formData.get('name') as string;
@@ -142,6 +145,9 @@ export async function updateProduct(formData: FormData) {
 
 export async function deleteProduct(id: string) {
   const db = getDb();
+  if (!db) {
+    throw new Error('Database connection unavailable.');
+  }
 
   try {
     await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
@@ -157,6 +163,9 @@ export async function deleteProduct(id: string) {
 
 export async function createProduct(formData: FormData) {
   const db = getDb();
+  if (!db) {
+    throw new Error('Database connection unavailable.');
+  }
   const id = crypto.randomUUID();
 
   const name = formData.get('name') as string;

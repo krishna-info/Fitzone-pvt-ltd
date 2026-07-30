@@ -12,12 +12,25 @@ interface ProductFormProps {
   product?: Product;
 }
 
+function ensureStringArray(val: any, fallback: string[] = []): string[] {
+  if (Array.isArray(val)) return val;
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      // return fallback below
+    }
+  }
+  return fallback;
+}
+
 export function ProductFormModal({ product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [existingImages, setExistingImages] = useState<string[]>(product?.images || []);
-  const [colors, setColors] = useState<string[]>(product?.colors || ['Black', 'Navy', 'Heather Gray', 'White']);
-  const [sizes, setSizes] = useState<string[]>(product?.sizes || ['S', 'M', 'L', 'XL', 'XXL']);
+  const [existingImages, setExistingImages] = useState<string[]>(() => ensureStringArray(product?.images, []));
+  const [colors, setColors] = useState<string[]>(() => ensureStringArray(product?.colors, ['Black', 'Navy', 'Heather Gray', 'White']));
+  const [sizes, setSizes] = useState<string[]>(() => ensureStringArray(product?.sizes, ['S', 'M', 'L', 'XL', 'XXL']));
   const [newColor, setNewColor] = useState('');
   const [newSize, setNewSize] = useState('');
 
@@ -25,9 +38,9 @@ export function ProductFormModal({ product }: ProductFormProps) {
 
   React.useEffect(() => {
     if (open) {
-      setExistingImages(product?.images || []);
-      setColors(product?.colors || ['Black', 'Navy', 'Heather Gray', 'White']);
-      setSizes(product?.sizes || ['S', 'M', 'L', 'XL', 'XXL']);
+      setExistingImages(ensureStringArray(product?.images, []));
+      setColors(ensureStringArray(product?.colors, ['Black', 'Navy', 'Heather Gray', 'White']));
+      setSizes(ensureStringArray(product?.sizes, ['S', 'M', 'L', 'XL', 'XXL']));
       setNewColor('');
       setNewSize('');
     }

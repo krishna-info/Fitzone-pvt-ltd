@@ -16,10 +16,12 @@ export default async function AdminOrdersPage() {
 
   let orders = [];
   try {
-    const { results } = await db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
-    orders = results;
+    if (db) {
+      const { results } = await db.prepare('SELECT * FROM orders ORDER BY created_at DESC').all();
+      orders = results || [];
+    }
   } catch (error: any) {
-    console.error('Error fetching orders:', error.message);
+    console.error('Error fetching orders:', error?.message || error);
   }
 
   return (

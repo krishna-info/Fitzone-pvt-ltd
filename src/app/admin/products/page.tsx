@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ChevronLeft, Package, Search } from 'lucide-react';
 import { getDb } from '@/lib/db';
+import { parseProduct } from '@/lib/products';
 import { ProductFormModal } from '@/components/admin/ProductFormModal';
 import { DeleteProductButton } from '@/components/admin/DeleteProductButton';
 import { Pagination } from '@/components/ui/Pagination';
@@ -18,7 +19,7 @@ export default async function ProductsManagementPage({
 }) {
   const db = getDb();
 
-  const page = Number(searchParams.page) || 1;
+  const page = Number(searchParams?.page) || 1;
   const limit = 12;
   const offset = (page - 1) * limit;
 
@@ -26,21 +27,18 @@ export default async function ProductsManagementPage({
   let totalProducts = 0;
 
   try {
-    const { results: countResults } = await db.prepare('SELECT COUNT(*) as count FROM products').all();
-    totalProducts = countResults[0].count as number;
+    if (db) {
+      const { results: countResults } = await db.prepare('SELECT COUNT(*) as count FROM products').all();
+      totalProducts = (countResults && countResults[0]?.count) ? Number(countResults[0].count) : 0;
 
-    const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?')
-      .bind(limit, offset)
-      .all();
+      const { results } = await db.prepare('SELECT * FROM products ORDER BY created_at DESC LIMIT ? OFFSET ?')
+        .bind(limit, offset)
+        .all();
 
-    products = results;
-    // Map stringified JSON arrays back to array object for the UI
-    products = products.map((p: any) => ({
-      ...p,
-      images: typeof p.images === 'string' ? JSON.parse(p.images) : (p.images || [])
-    }));
+      products = (results || []).map(parseProduct);
+    }
   } catch (error: any) {
-    console.error('Error fetching products:', error.message);
+    console.error('Error fetching products:', error?.message || error);
   }
 
   const totalPages = Math.ceil(totalProducts / limit);

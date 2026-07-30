@@ -13,20 +13,31 @@ export const metadata: Metadata = {
 export default async function AdminDashboard() {
   const db = getDb();
 
-  // Fetch counts and stats
-  const queries = await Promise.all([
-    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries').first(),
-    db.prepare('SELECT COUNT(*) as count FROM products').first(),
-    db.prepare('SELECT amount FROM payments WHERE status = ?').bind('captured').all(),
-    db.prepare('SELECT COUNT(*) as count FROM contact_enquiries WHERE created_at > ?').bind(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).first(),
-    db.prepare('SELECT COUNT(*) as count FROM posts').first()
-  ]);
+  let enquiriesCount = 0;
+  let productsCount = 0;
+  let paymentsData: any[] = [];
+  let newEnquiriesCount = 0;
+  let postsCount = 0;
 
-  const enquiriesCount = queries[0]?.count || 0;
-  const productsCount = queries[1]?.count || 0;
-  const paymentsData = queries[2]?.results || [];
-  const newEnquiriesCount = queries[3]?.count || 0;
-  const postsCount = queries[4]?.count || 0;
+  if (db) {
+    try {
+      const queries = await Promise.all([
+        db.prepare('SELECT COUNT(*) as count FROM contact_enquiries').first(),
+        db.prepare('SELECT COUNT(*) as count FROM products').first(),
+        db.prepare('SELECT amount FROM payments WHERE status = ?').bind('captured').all(),
+        db.prepare('SELECT COUNT(*) as count FROM contact_enquiries WHERE created_at > ?').bind(new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()).first(),
+        db.prepare('SELECT COUNT(*) as count FROM posts').first()
+      ]);
+
+      enquiriesCount = (queries[0]?.count as number) || 0;
+      productsCount = (queries[1]?.count as number) || 0;
+      paymentsData = (queries[2]?.results as any[]) || [];
+      newEnquiriesCount = (queries[3]?.count as number) || 0;
+      postsCount = (queries[4]?.count as number) || 0;
+    } catch (error) {
+      console.error('Error loading admin dashboard stats:', error);
+    }
+  }
 
   const totalPayments = (paymentsData || []).reduce((acc: any, curr: any) => acc + (curr.amount / 100), 0);
 

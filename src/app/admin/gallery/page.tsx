@@ -26,20 +26,22 @@ export default async function AdminGalleryPage({
   let totalItems = 0;
   
   try {
-    // Fetch gallery images
-    const { results } = (await db
-      .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC LIMIT ? OFFSET ?')
-      .bind(limit, offset)
-      .all()) as { results: GalleryImage[] };
-    images = results || [];
+    if (db) {
+      // Fetch gallery images
+      const { results } = (await db
+        .prepare('SELECT * FROM gallery_images ORDER BY created_at DESC LIMIT ? OFFSET ?')
+        .bind(limit, offset)
+        .all()) as { results: GalleryImage[] };
+      images = results || [];
 
-    // Get total count for pagination
-    const { results: countResult } = (await db
-      .prepare('SELECT COUNT(*) as total FROM gallery_images')
-      .all()) as { results: { total: number }[] };
-    totalItems = countResult[0]?.total || 0;
+      // Get total count for pagination
+      const { results: countResult } = (await db
+        .prepare('SELECT COUNT(*) as total FROM gallery_images')
+        .all()) as { results: { total: number }[] };
+      totalItems = countResult && countResult[0]?.total ? countResult[0].total : 0;
+    }
   } catch (error: any) {
-    console.error('Error fetching gallery images:', error.message);
+    console.error('Error fetching gallery images:', error?.message || error);
   }
 
   const totalPages = Math.ceil(totalItems / limit);

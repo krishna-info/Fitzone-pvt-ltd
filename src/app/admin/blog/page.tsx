@@ -19,7 +19,7 @@ export default async function BlogManagementPage({
 }) {
   const db = getDb();
 
-  const page = Number(searchParams.page) || 1;
+  const page = Number(searchParams?.page) || 1;
   const limit = 12;
   const offset = (page - 1) * limit;
 
@@ -27,15 +27,17 @@ export default async function BlogManagementPage({
   let totalPosts = 0;
 
   try {
-    const { results: countResults } = await db.prepare('SELECT COUNT(*) as count FROM posts').all();
-    totalPosts = countResults[0].count as number;
+    if (db) {
+      const { results: countResults } = await db.prepare('SELECT COUNT(*) as count FROM posts').all();
+      totalPosts = (countResults && countResults[0]?.count) ? Number(countResults[0].count) : 0;
 
-    const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?')
-      .bind(limit, offset)
-      .all();
-    posts = results;
+      const { results } = await db.prepare('SELECT * FROM posts ORDER BY created_at DESC LIMIT ? OFFSET ?')
+        .bind(limit, offset)
+        .all();
+      posts = results || [];
+    }
   } catch (error: any) {
-    console.error('Error fetching posts:', error.message);
+    console.error('Error fetching posts:', error?.message || error);
   }
 
   const totalPages = Math.ceil(totalPosts / limit);
