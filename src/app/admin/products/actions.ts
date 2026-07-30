@@ -4,6 +4,23 @@ import { getDb, getBucket } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { PRODUCT_CATEGORIES } from '@/lib/product-types';
 
+function extractErrorMessage(error: any, fallback: string): string {
+  const rawMsg = error?.message || error?.cause?.message || String(error || '');
+  const lowerMsg = rawMsg.toLowerCase();
+
+  if (lowerMsg.includes('unique') || lowerMsg.includes('constraint') || lowerMsg.includes('sqlite_stat')) {
+    return 'A product with this slug or name already exists. Please choose a unique name or slug.';
+  }
+
+  // Remove internal stack traces and clean up error message
+  const cleaned = rawMsg
+    .split('\n')[0]
+    .replace(/at (?:D1DatabaseSession|cloudflare-internal|worker).*/g, '')
+    .trim();
+
+  return cleaned && cleaned !== 'Error' && !cleaned.startsWith('at ') ? cleaned : fallback;
+}
+
 async function processImages(formData: FormData): Promise<string[]> {
   const imageFiles = formData.getAll('images') as File[];
   const existingImagesRaw = formData.get('existing_images') as string;
@@ -63,7 +80,8 @@ async function generateUniqueSlug(db: any, rawSlug: string, name: string, curren
       }
       candidate = `${base}-${counter++}`;
     } catch {
-      break;
+      // If error occurs during check, try next counter candidate
+      candidate = `${base}-${counter++}`;
     }
   }
 
@@ -154,12 +172,7 @@ export async function updateProduct(formData: FormData) {
     ).run();
   } catch (error: any) {
     console.error('Failed to update product:', error);
-    const msg = error?.message || String(error);
-    if (msg.includes('UNIQUE constraint failed') || msg.includes('sqlite_stat')) {
-      throw new Error('A product with this slug or identifier already exists. Please choose a unique name/slug.');
-    }
-    const cleanMsg = msg.split('\n')[0].replace(/at D1DatabaseSession.*$/, '').trim();
-    throw new Error(cleanMsg || 'Failed to update product');
+    throw new Error(extractErrorMessage(error, 'Failed to update product. Please verify inputs and try again.'));
   }
 
   revalidatePath('/admin/products');
@@ -179,7 +192,7 @@ export async function deleteProduct(id: string) {
     await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
   } catch (error: any) {
     console.error('Failed to delete product:', error);
-    throw new Error(error.message || 'Failed to delete product');
+    throw new Error(extractErrorMessage(error, 'Failed to delete product.'));
   }
 
   revalidatePath('/admin/products');
@@ -254,12 +267,7 @@ export async function createProduct(formData: FormData) {
     ).run();
   } catch (error: any) {
     console.error('Failed to create product:', error);
-    const msg = error?.message || String(error);
-    if (msg.includes('UNIQUE constraint failed') || msg.includes('sqlite_stat')) {
-      throw new Error('A product with this slug or identifier already exists. Please choose a unique name/slug.');
-    }
-    const cleanMsg = msg.split('\n')[0].replace(/at D1DatabaseSession.*$/, '').trim();
-    throw new Error(cleanMsg || 'Failed to create product');
+    throw new Error(extractErrorMessage(error, 'Failed to create product. Please verify inputs and try again.'));
   }
 
   revalidatePath('/admin/products');
