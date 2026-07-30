@@ -5,8 +5,17 @@ import { revalidatePath } from 'next/cache';
 import { PRODUCT_CATEGORIES } from '@/lib/product-types';
 
 function extractErrorMessage(error: any, fallback: string): string {
-  const rawMsg = error?.message || error?.cause?.message || String(error || '');
-  const lowerMsg = rawMsg.toLowerCase();
+  const causeMsg = error?.cause?.message || error?.cause;
+  const rawMsg = error?.message || (typeof causeMsg === 'string' ? causeMsg : '') || String(error || '');
+  const lowerMsg = (rawMsg + ' ' + (typeof causeMsg === 'string' ? causeMsg : '')).toLowerCase();
+
+  console.error('[D1 Action Diagnostic Log]', {
+    message: error?.message,
+    cause: error?.cause,
+    causeMessage: error?.cause?.message,
+    rawMsg,
+    stack: error?.stack
+  });
 
   if (lowerMsg.includes('unique') || lowerMsg.includes('constraint') || lowerMsg.includes('sqlite_stat')) {
     return 'A product with this slug or name already exists. Please choose a unique name or slug.';
@@ -184,7 +193,21 @@ export async function updateProduct(formData: FormData) {
       UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, colors = ?, sizes = ?, features = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
-      name, slug, category, category_slug, price_inr, moq, JSON.stringify(images), description, JSON.stringify(specifications), JSON.stringify(colorsArray), JSON.stringify(sizesArray), JSON.stringify(featuresArray), is_enquiry_only, is_active, id
+      name ?? '',
+      slug ?? '',
+      category ?? 'Default',
+      category_slug ?? 'default',
+      price_inr ?? 0,
+      moq ?? 1,
+      JSON.stringify(images || []),
+      description ?? '',
+      JSON.stringify(specifications || {}),
+      JSON.stringify(colorsArray || []),
+      JSON.stringify(sizesArray || []),
+      JSON.stringify(featuresArray || []),
+      is_enquiry_only ?? 0,
+      is_active ?? 1,
+      id ?? ''
     ).run();
   } catch (error: any) {
     console.error('Failed to update product:', error);
@@ -205,7 +228,7 @@ export async function deleteProduct(id: string) {
   }
 
   try {
-    await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
+    await db.prepare('DELETE FROM products WHERE id = ?').bind((id || '').trim()).run();
   } catch (error: any) {
     console.error('Failed to delete product:', error);
     throw new Error(extractErrorMessage(error, 'Failed to delete product.'));
@@ -308,7 +331,21 @@ export async function createProduct(formData: FormData) {
       INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, colors, sizes, features, is_enquiry_only, is_active, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).bind(
-      id, name, slug, category, category_slug, price_inr, moq, JSON.stringify(images), description, JSON.stringify(specifications), JSON.stringify(colorsArray), JSON.stringify(sizesArray), JSON.stringify(featuresArray), is_enquiry_only, is_active
+      id,
+      name ?? '',
+      slug ?? '',
+      category ?? 'Default',
+      category_slug ?? 'default',
+      price_inr ?? 0,
+      moq ?? 1,
+      JSON.stringify(images || []),
+      description ?? '',
+      JSON.stringify(specifications || {}),
+      JSON.stringify(colorsArray || []),
+      JSON.stringify(sizesArray || []),
+      JSON.stringify(featuresArray || []),
+      is_enquiry_only ?? 0,
+      is_active ?? 1
     ).run();
   } catch (error: any) {
     console.error('Failed to create product:', error);
