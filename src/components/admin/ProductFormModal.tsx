@@ -195,7 +195,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Status</label>
             <select 
               name="is_active" 
-              defaultValue={String(product?.is_active ?? true)}
+              defaultValue={product ? (product.is_active ? 'true' : 'false') : 'true'}
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             >
               <option value="true">Active</option>
