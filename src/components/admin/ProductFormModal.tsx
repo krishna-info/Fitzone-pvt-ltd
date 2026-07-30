@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Product, PRODUCT_CATEGORIES } from '@/lib/product-types';
 import { Button } from '@/components/ui/Button';
 import { updateProduct, createProduct } from '@/app/admin/products/actions';
@@ -37,8 +38,10 @@ function parseSpecsToItems(specifications?: Record<string, string>): SpecItem[] 
 }
 
 export function ProductFormModal({ product }: ProductFormProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  
   const [existingImages, setExistingImages] = useState<string[]>(() => ensureStringArray(product?.images, []));
   const [colors, setColors] = useState<string[]>(() => ensureStringArray(product?.colors, ['Black', 'Navy', 'Heather Gray', 'White']));
   const [sizes, setSizes] = useState<string[]>(() => ensureStringArray(product?.sizes, ['S', 'M', 'L', 'XL', 'XXL']));
@@ -158,7 +161,9 @@ export function ProductFormModal({ product }: ProductFormProps) {
       } else {
         await createProduct(formData);
       }
+      
       setOpen(false);
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -184,7 +189,11 @@ export function ProductFormModal({ product }: ProductFormProps) {
         )
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
+      <form 
+        key={open ? (product?.id || 'new_form') : 'closed_form'}
+        onSubmit={handleSubmit} 
+        className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide"
+      >
         {isEdit && <input type="hidden" name="id" value={product.id} />}
         
         {/* Name & Slug */}
@@ -194,7 +203,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <input 
               name="name" 
               required 
-              defaultValue={product?.name} 
+              defaultValue={product?.name || ''} 
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
@@ -203,7 +212,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <input 
               name="slug" 
               placeholder="performance-tshirt"
-              defaultValue={product?.slug} 
+              defaultValue={product?.slug || ''} 
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
@@ -216,8 +225,9 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <input 
               name="price_inr" 
               type="number" 
+              step="any"
               required 
-              defaultValue={product?.price_inr} 
+              defaultValue={product?.price_inr ?? ''} 
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
@@ -227,7 +237,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
               name="moq" 
               type="number" 
               required 
-              defaultValue={product?.moq || 50} 
+              defaultValue={product?.moq ?? 50} 
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm"
             />
           </div>
@@ -240,7 +250,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <select 
               name="category_slug" 
               required 
-              defaultValue={product?.category_slug} 
+              defaultValue={product?.category_slug || 't-shirts-jerseys'} 
               className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             >
               {PRODUCT_CATEGORIES.map(c => (
@@ -455,7 +465,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
           <textarea 
             name="description" 
             rows={3} 
-            defaultValue={product?.description} 
+            defaultValue={product?.description || ''} 
             className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm resize-none"
           />
         </div>
