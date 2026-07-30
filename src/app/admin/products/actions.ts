@@ -41,24 +41,32 @@ async function processImages(formData: FormData): Promise<string[]> {
     finalImages = [];
   }
 
-  const bucket = getBucket();
-  if (bucket) {
-    for (const file of imageFiles) {
-      if (file && file.size > 0 && typeof file !== 'string') {
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const imageKey = `products/${crypto.randomUUID()}.webp`;
-        try {
-          await bucket.put(imageKey, buffer, {
-            httpMetadata: { contentType: 'image/webp' }
-          });
-          const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
-          finalImages.push(`${r2BaseUrl.replace(/\/$/, '')}/${imageKey}`);
-        } catch (error) {
-          console.error('Failed to upload image file to R2 bucket:', error);
-          throw new Error('Image upload failed. Product changes were not saved.');
+  try {
+    const bucket = getBucket();
+    if (bucket) {
+      for (const file of imageFiles) {
+        if (file && typeof file !== 'string' && file.size > 0 && file.name) {
+          const arrayBuf = await file.arrayBuffer();
+          if (!arrayBuf || arrayBuf.byteLength === 0) continue;
+          
+          const buffer = Buffer.from(arrayBuf);
+          const imageKey = `products/${crypto.randomUUID()}.webp`;
+          try {
+            await bucket.put(imageKey, buffer, {
+              httpMetadata: { contentType: 'image/webp' }
+            });
+            const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
+            if (r2BaseUrl) {
+              finalImages.push(`${r2BaseUrl.replace(/\/$/, '')}/${imageKey}`);
+            }
+          } catch (uploadError) {
+            console.error('Failed to upload image file to R2 bucket:', uploadError);
+          }
         }
       }
     }
+  } catch (bucketError) {
+    console.error('Error during image processing:', bucketError);
   }
 
   return finalImages;
@@ -72,25 +80,32 @@ async function generateUniqueSlug(db: any, rawSlug: string, name: string, curren
   if (!base) {
     base = 'product';
   }
+
+  if (!db) return base;
+
   let candidate = base;
   let counter = 1;
+  const cleanId = (currentId || '').trim();
 
   for (let i = 0; i < 50; i++) {
     try {
       let query = 'SELECT id FROM products WHERE slug = ?';
-      const params: any[] = [candidate];
-      if (currentId) {
+      let stmt;
+      if (cleanId) {
         query += ' AND id != ?';
-        params.push(currentId);
+        stmt = db.prepare(query).bind(candidate, cleanId);
+      } else {
+        stmt = db.prepare(query).bind(candidate);
       }
-      const { results } = await db.prepare(query).bind(...params).all();
+
+      const { results } = await stmt.all();
       if (!results || results.length === 0) {
         return candidate;
       }
       candidate = `${base}-${counter++}`;
-    } catch {
-      // If error occurs during check, try next counter candidate
-      candidate = `${base}-${counter++}`;
+    } catch (error) {
+      console.error('Error checking slug uniqueness in D1:', error);
+      return candidate;
     }
   }
 

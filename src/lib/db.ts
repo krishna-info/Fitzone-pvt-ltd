@@ -2,13 +2,25 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { unstable_noStore } from 'next/cache';
 
 export const getDb = () => {
-  unstable_noStore();
-  return getCloudflareContext().env.DB;
+  try {
+    unstable_noStore();
+    const ctx = getCloudflareContext();
+    return ctx?.env?.DB || null;
+  } catch (err) {
+    console.error('Error accessing Cloudflare D1 DB binding:', err);
+    return null;
+  }
 };
 
 export const getBucket = () => {
-  unstable_noStore();
-  return getCloudflareContext().env.BUCKET;
+  try {
+    unstable_noStore();
+    const ctx = getCloudflareContext();
+    return ctx?.env?.BUCKET || null;
+  } catch (err) {
+    console.warn('R2 Bucket binding unavailable:', err);
+    return null;
+  }
 };
 
 export interface GalleryImage {
