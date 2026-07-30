@@ -117,6 +117,10 @@ export async function updateProduct(formData: FormData) {
   const description = (formData.get('description') as string)?.trim() || '';
   const rawActive = formData.get('is_active');
   const is_active = (rawActive === 'true' || rawActive === '1') ? 1 : 0;
+
+  const rawEnquiry = formData.get('is_enquiry_only');
+  const is_enquiry_only = (rawEnquiry === 'true' || rawEnquiry === '1') ? 1 : 0;
+
   const category = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
 
   const slug = await generateUniqueSlug(db, rawSlug, name, id);
@@ -143,20 +147,32 @@ export async function updateProduct(formData: FormData) {
     // fallback to defaults
   }
 
-  // Retrieve existing specifications to preserve custom entries
-  let existingSpecs: Record<string, string> = {};
+  let featuresArray: string[] = [];
   try {
-    const { results } = await db.prepare('SELECT specifications FROM products WHERE id = ?').bind(id).all();
-    if (results && results[0]?.specifications) {
-      const specsRaw = results[0].specifications;
-      existingSpecs = typeof specsRaw === 'string' ? JSON.parse(specsRaw) : (specsRaw || {});
+    const featuresRaw = formData.get('features') as string;
+    if (featuresRaw) {
+      const parsed = typeof featuresRaw === 'string' ? JSON.parse(featuresRaw) : featuresRaw;
+      if (Array.isArray(parsed)) featuresArray = parsed;
     }
   } catch {
-    existingSpecs = {};
+    // fallback
+  }
+
+  let customSpecs: Record<string, string> = {};
+  try {
+    const specsRaw = formData.get('specifications') as string;
+    if (specsRaw) {
+      const parsed = typeof specsRaw === 'string' ? JSON.parse(specsRaw) : specsRaw;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        customSpecs = parsed;
+      }
+    }
+  } catch {
+    customSpecs = {};
   }
 
   const specifications: Record<string, string> = {
-    ...existingSpecs,
+    ...customSpecs,
     _colors: JSON.stringify(colorsArray),
     _sizes: JSON.stringify(sizesArray)
   };
@@ -165,10 +181,10 @@ export async function updateProduct(formData: FormData) {
 
   try {
     await db.prepare(`
-      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, colors = ?, sizes = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, colors = ?, sizes = ?, features = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
-      name, slug, category, category_slug, price_inr, moq, JSON.stringify(images), description, JSON.stringify(specifications), JSON.stringify(colorsArray), JSON.stringify(sizesArray), is_active, id
+      name, slug, category, category_slug, price_inr, moq, JSON.stringify(images), description, JSON.stringify(specifications), JSON.stringify(colorsArray), JSON.stringify(sizesArray), JSON.stringify(featuresArray), is_enquiry_only, is_active, id
     ).run();
   } catch (error: any) {
     console.error('Failed to update product:', error);
@@ -225,6 +241,10 @@ export async function createProduct(formData: FormData) {
   const description = (formData.get('description') as string)?.trim() || '';
   const rawActive = formData.get('is_active');
   const is_active = (rawActive === 'true' || rawActive === '1') ? 1 : 0;
+
+  const rawEnquiry = formData.get('is_enquiry_only');
+  const is_enquiry_only = (rawEnquiry === 'true' || rawEnquiry === '1') ? 1 : 0;
+
   const category = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
 
   const slug = await generateUniqueSlug(db, rawSlug, name);
@@ -251,7 +271,32 @@ export async function createProduct(formData: FormData) {
     // fallback to defaults
   }
 
+  let featuresArray: string[] = [];
+  try {
+    const featuresRaw = formData.get('features') as string;
+    if (featuresRaw) {
+      const parsed = typeof featuresRaw === 'string' ? JSON.parse(featuresRaw) : featuresRaw;
+      if (Array.isArray(parsed)) featuresArray = parsed;
+    }
+  } catch {
+    // fallback
+  }
+
+  let customSpecs: Record<string, string> = {};
+  try {
+    const specsRaw = formData.get('specifications') as string;
+    if (specsRaw) {
+      const parsed = typeof specsRaw === 'string' ? JSON.parse(specsRaw) : specsRaw;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        customSpecs = parsed;
+      }
+    }
+  } catch {
+    customSpecs = {};
+  }
+
   const specifications: Record<string, string> = {
+    ...customSpecs,
     _colors: JSON.stringify(colorsArray),
     _sizes: JSON.stringify(sizesArray)
   };
@@ -260,10 +305,10 @@ export async function createProduct(formData: FormData) {
 
   try {
     await db.prepare(`
-      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, colors, sizes, is_active, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, colors, sizes, features, is_enquiry_only, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).bind(
-      id, name, slug, category, category_slug, price_inr, moq, JSON.stringify(images), description, JSON.stringify(specifications), JSON.stringify(colorsArray), JSON.stringify(sizesArray), is_active
+      id, name, slug, category, category_slug, price_inr, moq, JSON.stringify(images), description, JSON.stringify(specifications), JSON.stringify(colorsArray), JSON.stringify(sizesArray), JSON.stringify(featuresArray), is_enquiry_only, is_active
     ).run();
   } catch (error: any) {
     console.error('Failed to create product:', error);

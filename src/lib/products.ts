@@ -43,7 +43,18 @@ export const parseProduct = (p: any): Product => {
   }
 
   colors = colors || [];
+  let features: string[] = [];
+  try {
+    if (p.features) {
+      features = typeof p.features === 'string' ? JSON.parse(p.features) : p.features;
+    }
+  } catch {
+    features = [];
+  }
+
+  colors = colors || [];
   sizes = sizes || [];
+  features = features || [];
 
   // Clean hidden internal keys from public specifications map
   const cleanSpecs = { ...specifications };
@@ -55,7 +66,10 @@ export const parseProduct = (p: any): Product => {
     images,
     specifications: cleanSpecs,
     colors,
-    sizes
+    sizes,
+    features,
+    is_enquiry_only: Boolean(p.is_enquiry_only),
+    is_active: Boolean(p.is_active)
   };
 };
 

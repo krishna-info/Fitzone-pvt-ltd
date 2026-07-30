@@ -6,10 +6,14 @@ import { Button } from '@/components/ui/Button';
 import { updateProduct, createProduct } from '@/app/admin/products/actions';
 import { Modal } from '@/components/ui/Modal';
 import { Edit, Plus } from 'lucide-react';
-import Image from 'next/image';
 
 interface ProductFormProps {
   product?: Product;
+}
+
+interface SpecItem {
+  key: string;
+  value: string;
 }
 
 function ensureStringArray(val: any, fallback: string[] = []): string[] {
@@ -19,10 +23,17 @@ function ensureStringArray(val: any, fallback: string[] = []): string[] {
       const parsed = JSON.parse(val);
       if (Array.isArray(parsed)) return parsed;
     } catch {
-      // return fallback below
+      // return fallback
     }
   }
   return fallback;
+}
+
+function parseSpecsToItems(specifications?: Record<string, string>): SpecItem[] {
+  if (!specifications) return [];
+  return Object.entries(specifications)
+    .filter(([k]) => !k.startsWith('_'))
+    .map(([key, value]) => ({ key, value }));
 }
 
 export function ProductFormModal({ product }: ProductFormProps) {
@@ -31,8 +42,14 @@ export function ProductFormModal({ product }: ProductFormProps) {
   const [existingImages, setExistingImages] = useState<string[]>(() => ensureStringArray(product?.images, []));
   const [colors, setColors] = useState<string[]>(() => ensureStringArray(product?.colors, ['Black', 'Navy', 'Heather Gray', 'White']));
   const [sizes, setSizes] = useState<string[]>(() => ensureStringArray(product?.sizes, ['S', 'M', 'L', 'XL', 'XXL']));
+  const [features, setFeatures] = useState<string[]>(() => ensureStringArray(product?.features, []));
+  const [specs, setSpecs] = useState<SpecItem[]>(() => parseSpecsToItems(product?.specifications));
+
   const [newColor, setNewColor] = useState('');
   const [newSize, setNewSize] = useState('');
+  const [newFeature, setNewFeature] = useState('');
+  const [newSpecKey, setNewSpecKey] = useState('');
+  const [newSpecValue, setNewSpecValue] = useState('');
 
   const isEdit = !!product;
 
@@ -41,8 +58,13 @@ export function ProductFormModal({ product }: ProductFormProps) {
       setExistingImages(ensureStringArray(product?.images, []));
       setColors(ensureStringArray(product?.colors, ['Black', 'Navy', 'Heather Gray', 'White']));
       setSizes(ensureStringArray(product?.sizes, ['S', 'M', 'L', 'XL', 'XXL']));
+      setFeatures(ensureStringArray(product?.features, []));
+      setSpecs(parseSpecsToItems(product?.specifications));
       setNewColor('');
       setNewSize('');
+      setNewFeature('');
+      setNewSpecKey('');
+      setNewSpecValue('');
     }
   }, [open, product]);
 
@@ -72,6 +94,29 @@ export function ProductFormModal({ product }: ProductFormProps) {
     setSizes(sizes.filter(s => s !== sizeToRemove));
   };
 
+  const addFeature = () => {
+    if (newFeature.trim() && !features.includes(newFeature.trim())) {
+      setFeatures([...features, newFeature.trim()]);
+      setNewFeature('');
+    }
+  };
+
+  const removeFeature = (featureToRemove: string) => {
+    setFeatures(features.filter(f => f !== featureToRemove));
+  };
+
+  const addSpec = () => {
+    if (newSpecKey.trim() && newSpecValue.trim()) {
+      setSpecs([...specs.filter(s => s.key !== newSpecKey.trim()), { key: newSpecKey.trim(), value: newSpecValue.trim() }]);
+      setNewSpecKey('');
+      setNewSpecValue('');
+    }
+  };
+
+  const removeSpec = (keyToRemove: string) => {
+    setSpecs(specs.filter(s => s.key !== keyToRemove));
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -98,6 +143,15 @@ export function ProductFormModal({ product }: ProductFormProps) {
       formData.append('existing_images', JSON.stringify(validImages));
       formData.append('colors', JSON.stringify(colors));
       formData.append('sizes', JSON.stringify(sizes));
+      formData.append('features', JSON.stringify(features));
+
+      const specsObj: Record<string, string> = {};
+      specs.forEach(s => {
+        if (s.key.trim() && s.value.trim()) {
+          specsObj[s.key.trim()] = s.value.trim();
+        }
+      });
+      formData.append('specifications', JSON.stringify(specsObj));
       
       if (isEdit) {
         await updateProduct(formData);
@@ -133,6 +187,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 scrollbar-hide">
         {isEdit && <input type="hidden" name="id" value={product.id} />}
         
+        {/* Name & Slug */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Product Name</label>
@@ -154,6 +209,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
           </div>
         </div>
 
+        {/* Price & MOQ */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Price (INR)</label>
@@ -177,14 +233,15 @@ export function ProductFormModal({ product }: ProductFormProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {/* Category, Status & Enquiry Mode */}
+        <div className="grid grid-cols-3 gap-3">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category Slug</label>
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Category</label>
             <select 
               name="category_slug" 
               required 
               defaultValue={product?.category_slug} 
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             >
               {PRODUCT_CATEGORIES.map(c => (
                 <option key={c.slug} value={c.slug}>{c.name}</option>
@@ -196,14 +253,26 @@ export function ProductFormModal({ product }: ProductFormProps) {
             <select 
               name="is_active" 
               defaultValue={product ? (product.is_active ? 'true' : 'false') : 'true'}
-              className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             >
               <option value="true">Active</option>
               <option value="false">Draft</option>
             </select>
           </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Mode</label>
+            <select 
+              name="is_enquiry_only" 
+              defaultValue={product ? (product.is_enquiry_only ? 'true' : 'false') : 'false'}
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
+            >
+              <option value="false">Purchase</option>
+              <option value="true">Enquiry Only</option>
+            </select>
+          </div>
         </div>
 
+        {/* Images & Public URLs */}
         <div className="space-y-4">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Images & Public URLs</label>
           
@@ -323,6 +392,64 @@ export function ProductFormModal({ product }: ProductFormProps) {
           </div>
         </div>
 
+        {/* Key Product Features Manager */}
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest block">Key Features</label>
+          <div className="space-y-1.5 mb-2">
+            {features.map((feature, idx) => (
+              <div key={idx} className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 text-xs font-medium text-gray-800">
+                <span>• {feature}</span>
+                <button type="button" onClick={() => removeFeature(feature)} className="text-gray-400 hover:text-red-500 font-bold ml-2">✕</button>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              value={newFeature}
+              onChange={(e) => setNewFeature(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addFeature(); } }}
+              placeholder="Add feature (e.g. Moisture-Wicking Fabric)..."
+              className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-xs"
+            />
+            <Button type="button" variant="outline" size="sm" onClick={addFeature}>+ Add Feature</Button>
+          </div>
+        </div>
+
+        {/* Technical Specifications Manager */}
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          <label className="text-xs font-bold text-brand-dark uppercase tracking-widest block">Technical Specifications</label>
+          <div className="space-y-1.5 mb-2">
+            {specs.map((item) => (
+              <div key={item.key} className="flex items-center justify-between px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-800">
+                <span><strong className="text-brand-dark">{item.key}:</strong> {item.value}</span>
+                <button type="button" onClick={() => removeSpec(item.key)} className="text-gray-400 hover:text-red-500 font-bold ml-2">✕</button>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <input 
+              type="text"
+              value={newSpecKey}
+              onChange={(e) => setNewSpecKey(e.target.value)}
+              placeholder="Spec Name (e.g. Fabric)"
+              className="px-3 py-1.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-xs"
+            />
+            <div className="flex gap-2">
+              <input 
+                type="text"
+                value={newSpecValue}
+                onChange={(e) => setNewSpecValue(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSpec(); } }}
+                placeholder="Spec Value (e.g. 100% Polyester)"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-xs"
+              />
+              <Button type="button" variant="outline" size="sm" onClick={addSpec}>+ Add Spec</Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
         <div className="space-y-2 pt-2 border-t border-gray-100">
           <label className="text-xs font-bold text-brand-dark uppercase tracking-widest">Description</label>
           <textarea 
