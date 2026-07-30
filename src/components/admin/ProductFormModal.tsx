@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Product, PRODUCT_CATEGORIES } from '@/lib/product-types';
 import { Button } from '@/components/ui/Button';
-import { updateProduct, createProduct } from '@/app/admin/products/actions';
 import { Modal } from '@/components/ui/Modal';
 import { Edit, Plus } from 'lucide-react';
 
@@ -40,6 +39,7 @@ function parseSpecsToItems(specifications?: Record<string, string>): SpecItem[] 
 export function ProductFormModal({ product }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [statusText, setStatusText] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   
   const [existingImages, setExistingImages] = useState<string[]>(() => ensureStringArray(product?.images, []));
@@ -68,6 +68,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
       setNewFeature('');
       setNewSpecKey('');
       setNewSpecValue('');
+      setStatusText(null);
     }
   }, [open, product]);
 
@@ -123,22 +124,27 @@ export function ProductFormModal({ product }: ProductFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setStatusText('Processing images in browser...');
     
     try {
       const form = e.currentTarget;
       const formData = new FormData(form);
-      const originalFiles = formData.getAll('images') as File[];
+      const originalFiles = (formData.getAll('images') as File[]).filter(f => f && f.size > 0);
       formData.delete('images');
       
-      const { convertToWebP } = await import('@/lib/image-client');
-      
-      for (const file of originalFiles) {
-        if (file && file.size > 0) {
-          const webpBlob = await convertToWebP(file);
-          const newName = file.name.replace(/\.[^/.]+$/, "") + '.webp';
-          formData.append('images', webpBlob, newName);
-        } else {
-          formData.append('images', file);
+      if (originalFiles.length > 0) {
+        setStatusText(`Converting ${originalFiles.length} image(s) to WebP format in browser...`);
+        const { convertToWebP } = await import('@/lib/image-client');
+        
+        for (const file of originalFiles) {
+          try {
+            const webpBlob = await convertToWebP(file, 0.85, 1600);
+            const newName = file.name.replace(/\.[^/.]+$/, "") + '.webp';
+            formData.append('images', webpBlob, newName);
+          } catch (imgErr) {
+            console.warn('Browser WebP conversion fallback:', imgErr);
+            formData.append('images', file);
+          }
         }
       }
 
@@ -156,10 +162,20 @@ export function ProductFormModal({ product }: ProductFormProps) {
       });
       formData.append('specifications', JSON.stringify(specsObj));
       
-      if (isEdit) {
-        await updateProduct(formData);
-      } else {
-        await createProduct(formData);
+      setStatusText('Saving product to database...');
+
+      const apiEndpoint = '/api/admin/products';
+      const apiMethod = isEdit ? 'PUT' : 'POST';
+
+      const response = await fetch(apiEndpoint, {
+        method: apiMethod,
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Failed to save product via backend API.');
       }
       
       setOpen(false);
@@ -168,6 +184,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
       alert(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
+      setStatusText(null);
     }
   };
 
@@ -350,7 +367,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
               accept="image/*"
               className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-brand-primary outline-none text-sm bg-white"
             />
-            <p className="text-xs text-gray-500 mt-1">Files will be converted to WebP format.</p>
+            <p className="text-xs text-gray-500 mt-1">Images will be resized & converted to WebP in browser before uploading.</p>
           </div>
         </div>
 
@@ -471,7 +488,7 @@ export function ProductFormModal({ product }: ProductFormProps) {
         </div>
 
         <Button type="submit" className="w-full h-12" disabled={loading}>
-          {loading ? 'Saving Changes...' : (isEdit ? 'Update Product' : 'Create Product')}
+          {loading ? (statusText || 'Saving Changes...') : (isEdit ? 'Update Product' : 'Create Product')}
         </Button>
       </form>
     </Modal>

@@ -48,7 +48,7 @@ async function processImages(formData: FormData): Promise<string[]> {
         if (file && typeof file !== 'string' && file.size > 0 && file.name) {
           const arrayBuf = await file.arrayBuffer();
           if (!arrayBuf || arrayBuf.byteLength === 0) continue;
-          
+
           const buffer = Buffer.from(arrayBuf);
           const imageKey = `products/${crypto.randomUUID()}.webp`;
           try {
@@ -360,7 +360,7 @@ export async function createProduct(formData: FormData) {
       JSON.stringify(sizesArray || []),
       JSON.stringify(featuresArray || []),
       is_enquiry_only ?? 0,
-      is_active ?? 1
+      is_active ?? 0
     ).run();
   } catch (error: any) {
     console.error('Failed to create product:', error);
