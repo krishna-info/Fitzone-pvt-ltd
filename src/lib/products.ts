@@ -77,21 +77,20 @@ export const parseProduct = (p: any): Product => {
 
 // Fetch all active products with pagination
 export async function getAllProducts(limit?: number, offset?: number): Promise<Product[]> {
-  let queryStr = 'SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC';
-  
-  if (limit !== undefined) {
-    queryStr += ` LIMIT ${limit}`;
-  }
-  if (offset !== undefined) {
-    queryStr += ` OFFSET ${offset}`;
-  }
+  const limitClause = limit !== undefined ? ` LIMIT ${limit}` : '';
+  const offsetClause = offset !== undefined ? ` OFFSET ${offset}` : '';
 
   try {
     const db = getDb();
     if (!db) return [];
     
-    const { results } = await db.prepare(queryStr).all();
-    return (results || []).map(parseProduct);
+    try {
+      const { results } = await db.prepare(`SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC${limitClause}${offsetClause}`).all();
+      return (results || []).map(parseProduct);
+    } catch {
+      const { results } = await db.prepare(`SELECT * FROM products WHERE is_active = 1 ORDER BY rowid DESC${limitClause}${offsetClause}`).all();
+      return (results || []).map(parseProduct);
+    }
   } catch (error) {
     console.error('Error fetching products:', error);
     return [];
@@ -100,21 +99,20 @@ export async function getAllProducts(limit?: number, offset?: number): Promise<P
 
 // Fetch products by category slug with pagination
 export async function getProductsByCategory(categorySlug: string, limit?: number, offset?: number): Promise<Product[]> {
-  let queryStr = 'SELECT * FROM products WHERE category_slug = ? AND is_active = 1 ORDER BY created_at DESC';
-  
-  if (limit !== undefined) {
-    queryStr += ` LIMIT ${limit}`;
-  }
-  if (offset !== undefined) {
-    queryStr += ` OFFSET ${offset}`;
-  }
+  const limitClause = limit !== undefined ? ` LIMIT ${limit}` : '';
+  const offsetClause = offset !== undefined ? ` OFFSET ${offset}` : '';
 
   try {
     const db = getDb();
     if (!db) return [];
 
-    const { results } = await db.prepare(queryStr).bind(categorySlug).all();
-    return (results || []).map(parseProduct);
+    try {
+      const { results } = await db.prepare(`SELECT * FROM products WHERE category_slug = ? AND is_active = 1 ORDER BY created_at DESC${limitClause}${offsetClause}`).bind(categorySlug).all();
+      return (results || []).map(parseProduct);
+    } catch {
+      const { results } = await db.prepare(`SELECT * FROM products WHERE category_slug = ? AND is_active = 1 ORDER BY rowid DESC${limitClause}${offsetClause}`).bind(categorySlug).all();
+      return (results || []).map(parseProduct);
+    }
   } catch (error) {
     console.error('Error fetching products by category:', error);
     return [];
@@ -127,11 +125,17 @@ export async function getLatestProducts(limit = 6): Promise<Product[]> {
     const db = getDb();
     if (!db) return [];
 
-    const { results } = await db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT ?')
-      .bind(limit)
-      .all();
-
-    return (results || []).map(parseProduct);
+    try {
+      const { results } = await db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT ?')
+        .bind(limit)
+        .all();
+      return (results || []).map(parseProduct);
+    } catch {
+      const { results } = await db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY rowid DESC LIMIT ?')
+        .bind(limit)
+        .all();
+      return (results || []).map(parseProduct);
+    }
   } catch (error) {
     console.error('Error fetching latest products:', error);
     return [];

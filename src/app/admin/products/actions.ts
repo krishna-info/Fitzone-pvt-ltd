@@ -196,7 +196,7 @@ export async function updateProduct(formData: FormData) {
 
   try {
     await db.prepare(`
-      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, is_enquiry_only = ?, is_active = ?
       WHERE id = ?
     `).bind(
       name ?? '',
@@ -306,8 +306,8 @@ export async function createProduct(formData: FormData) {
 
   try {
     await db.prepare(`
-      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, is_enquiry_only, is_active, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, is_enquiry_only, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       name ?? '',
