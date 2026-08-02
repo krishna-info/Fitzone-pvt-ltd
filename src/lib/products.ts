@@ -25,7 +25,7 @@ export const parseProduct = (p: any): Product => {
     if (p.colors) {
       colors = typeof p.colors === 'string' ? JSON.parse(p.colors) : p.colors;
     } else if (specifications._colors) {
-      colors = JSON.parse(specifications._colors);
+      colors = typeof specifications._colors === 'string' ? JSON.parse(specifications._colors) : specifications._colors;
     }
   } catch {
     colors = [];
@@ -36,30 +36,32 @@ export const parseProduct = (p: any): Product => {
     if (p.sizes) {
       sizes = typeof p.sizes === 'string' ? JSON.parse(p.sizes) : p.sizes;
     } else if (specifications._sizes) {
-      sizes = JSON.parse(specifications._sizes);
+      sizes = typeof specifications._sizes === 'string' ? JSON.parse(specifications._sizes) : specifications._sizes;
     }
   } catch {
     sizes = [];
   }
 
-  colors = colors || [];
   let features: string[] = [];
   try {
     if (p.features) {
       features = typeof p.features === 'string' ? JSON.parse(p.features) : p.features;
+    } else if (specifications._features) {
+      features = typeof specifications._features === 'string' ? JSON.parse(specifications._features) : specifications._features;
     }
   } catch {
     features = [];
   }
 
-  colors = colors || [];
-  sizes = sizes || [];
-  features = features || [];
+  colors = Array.isArray(colors) ? colors : [];
+  sizes = Array.isArray(sizes) ? sizes : [];
+  features = Array.isArray(features) ? features : [];
 
   // Clean hidden internal keys from public specifications map
   const cleanSpecs = { ...specifications };
   delete cleanSpecs._colors;
   delete cleanSpecs._sizes;
+  delete cleanSpecs._features;
 
   return {
     ...p,
@@ -77,16 +79,17 @@ export const parseProduct = (p: any): Product => {
 export async function getAllProducts(limit?: number, offset?: number): Promise<Product[]> {
   let queryStr = 'SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC';
   
-  if (limit) {
+  if (limit !== undefined) {
     queryStr += ` LIMIT ${limit}`;
-    if (offset) {
-      queryStr += ` OFFSET ${offset}`;
-    }
+  }
+  if (offset !== undefined) {
+    queryStr += ` OFFSET ${offset}`;
   }
 
   try {
     const db = getDb();
     if (!db) return [];
+    
     const { results } = await db.prepare(queryStr).all();
     return (results || []).map(parseProduct);
   } catch (error) {
@@ -99,16 +102,17 @@ export async function getAllProducts(limit?: number, offset?: number): Promise<P
 export async function getProductsByCategory(categorySlug: string, limit?: number, offset?: number): Promise<Product[]> {
   let queryStr = 'SELECT * FROM products WHERE category_slug = ? AND is_active = 1 ORDER BY created_at DESC';
   
-  if (limit) {
+  if (limit !== undefined) {
     queryStr += ` LIMIT ${limit}`;
-    if (offset) {
-      queryStr += ` OFFSET ${offset}`;
-    }
+  }
+  if (offset !== undefined) {
+    queryStr += ` OFFSET ${offset}`;
   }
 
   try {
     const db = getDb();
     if (!db) return [];
+
     const { results } = await db.prepare(queryStr).bind(categorySlug).all();
     return (results || []).map(parseProduct);
   } catch (error) {
@@ -118,12 +122,15 @@ export async function getProductsByCategory(categorySlug: string, limit?: number
 }
 
 // Fetch latest products for homepage gallery
-export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
+export async function getLatestProducts(limit = 6): Promise<Product[]> {
   try {
     const db = getDb();
     if (!db) return [];
+
     const { results } = await db.prepare('SELECT * FROM products WHERE is_active = 1 ORDER BY created_at DESC LIMIT ?')
-      .bind(limit).all();
+      .bind(limit)
+      .all();
+
     return (results || []).map(parseProduct);
   } catch (error) {
     console.error('Error fetching latest products:', error);
@@ -131,13 +138,16 @@ export async function getLatestProducts(limit: number = 5): Promise<Product[]> {
   }
 }
 
-// Fetch a single product by slug
+// Fetch single product by slug
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   try {
     const db = getDb();
     if (!db) return null;
+
     const product = await db.prepare('SELECT * FROM products WHERE slug = ?')
-      .bind(slug).first();
+      .bind(slug)
+      .first();
+
     return product ? parseProduct(product) : null;
   } catch (error) {
     console.error('Error fetching product by slug:', error);
@@ -145,3 +155,19 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   }
 }
 
+// Fetch related products from the same category
+export async function getRelatedProducts(categorySlug: string, currentSlug: string, limit = 4): Promise<Product[]> {
+  try {
+    const db = getDb();
+    if (!db) return [];
+
+    const { results } = await db.prepare('SELECT * FROM products WHERE category_slug = ? AND slug != ? AND is_active = 1 LIMIT ?')
+      .bind(categorySlug, currentSlug, limit)
+      .all();
+
+    return (results || []).map(parseProduct);
+  } catch (error) {
+    console.error('Error fetching related products:', error);
+    return [];
+  }
+}

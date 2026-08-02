@@ -186,14 +186,15 @@ export async function POST(request: NextRequest) {
     const specifications: Record<string, string> = {
       ...customSpecs,
       _colors: JSON.stringify(colorsArray),
-      _sizes: JSON.stringify(sizesArray)
+      _sizes: JSON.stringify(sizesArray),
+      _features: JSON.stringify(featuresArray)
     };
 
     const images = await processImages(formData);
 
     await db.prepare(`
-      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, colors, sizes, features, is_enquiry_only, is_active, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, is_enquiry_only, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).bind(
       id,
       name ?? '',
@@ -205,9 +206,6 @@ export async function POST(request: NextRequest) {
       JSON.stringify(images || []),
       description ?? '',
       JSON.stringify(specifications || {}),
-      JSON.stringify(colorsArray || []),
-      JSON.stringify(sizesArray || []),
-      JSON.stringify(featuresArray || []),
       is_enquiry_only ?? 0,
       is_active ?? 0
     ).run();
@@ -301,13 +299,14 @@ export async function PUT(request: NextRequest) {
     const specifications: Record<string, string> = {
       ...customSpecs,
       _colors: JSON.stringify(colorsArray),
-      _sizes: JSON.stringify(sizesArray)
+      _sizes: JSON.stringify(sizesArray),
+      _features: JSON.stringify(featuresArray)
     };
 
     const images = await processImages(formData);
 
     await db.prepare(`
-      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, colors = ?, sizes = ?, features = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
       name ?? '',
@@ -319,9 +318,6 @@ export async function PUT(request: NextRequest) {
       JSON.stringify(images || []),
       description ?? '',
       JSON.stringify(specifications || {}),
-      JSON.stringify(colorsArray || []),
-      JSON.stringify(sizesArray || []),
-      JSON.stringify(featuresArray || []),
       is_enquiry_only ?? 0,
       is_active ?? 0,
       id ?? ''

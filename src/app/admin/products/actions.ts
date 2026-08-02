@@ -21,7 +21,6 @@ function extractErrorMessage(error: any, fallback: string): string {
     return 'A product with this slug or name already exists. Please choose a unique name or slug.';
   }
 
-  // Remove internal stack traces and clean up error message
   const cleaned = rawMsg
     .split('\n')[0]
     .replace(/at (?:D1DatabaseSession|cloudflare-internal|worker).*/g, '')
@@ -48,7 +47,7 @@ async function processImages(formData: FormData): Promise<string[]> {
         if (file && typeof file !== 'string' && file.size > 0 && file.name) {
           const arrayBuf = await file.arrayBuffer();
           if (!arrayBuf || arrayBuf.byteLength === 0) continue;
-
+          
           const buffer = Buffer.from(arrayBuf);
           const imageKey = `products/${crypto.randomUUID()}.webp`;
           try {
@@ -146,7 +145,6 @@ export async function updateProduct(formData: FormData) {
   const is_enquiry_only = (rawEnquiry === 'true' || rawEnquiry === '1') ? 1 : 0;
 
   const category = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
-
   const slug = await generateUniqueSlug(db, rawSlug, name, id);
 
   let colorsArray: string[] = ['Black', 'Navy', 'Heather Gray', 'White'];
@@ -156,9 +154,7 @@ export async function updateProduct(formData: FormData) {
       const parsed = typeof colorsRaw === 'string' ? JSON.parse(colorsRaw) : colorsRaw;
       if (Array.isArray(parsed)) colorsArray = parsed;
     }
-  } catch {
-    // fallback to defaults
-  }
+  } catch {}
 
   let sizesArray: string[] = ['S', 'M', 'L', 'XL', 'XXL'];
   try {
@@ -167,9 +163,7 @@ export async function updateProduct(formData: FormData) {
       const parsed = typeof sizesRaw === 'string' ? JSON.parse(sizesRaw) : sizesRaw;
       if (Array.isArray(parsed)) sizesArray = parsed;
     }
-  } catch {
-    // fallback to defaults
-  }
+  } catch {}
 
   let featuresArray: string[] = [];
   try {
@@ -178,9 +172,7 @@ export async function updateProduct(formData: FormData) {
       const parsed = typeof featuresRaw === 'string' ? JSON.parse(featuresRaw) : featuresRaw;
       if (Array.isArray(parsed)) featuresArray = parsed;
     }
-  } catch {
-    // fallback
-  }
+  } catch {}
 
   let customSpecs: Record<string, string> = {};
   try {
@@ -191,21 +183,20 @@ export async function updateProduct(formData: FormData) {
         customSpecs = parsed;
       }
     }
-  } catch {
-    customSpecs = {};
-  }
+  } catch {}
 
   const specifications: Record<string, string> = {
     ...customSpecs,
     _colors: JSON.stringify(colorsArray),
-    _sizes: JSON.stringify(sizesArray)
+    _sizes: JSON.stringify(sizesArray),
+    _features: JSON.stringify(featuresArray)
   };
 
   const images = await processImages(formData);
 
   try {
     await db.prepare(`
-      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, colors = ?, sizes = ?, features = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      UPDATE products SET name = ?, slug = ?, category = ?, category_slug = ?, price_inr = ?, moq = ?, images = ?, description = ?, specifications = ?, is_enquiry_only = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
       name ?? '',
@@ -217,41 +208,20 @@ export async function updateProduct(formData: FormData) {
       JSON.stringify(images || []),
       description ?? '',
       JSON.stringify(specifications || {}),
-      JSON.stringify(colorsArray || []),
-      JSON.stringify(sizesArray || []),
-      JSON.stringify(featuresArray || []),
       is_enquiry_only ?? 0,
-      is_active ?? 1,
+      is_active ?? 0,
       id ?? ''
     ).run();
   } catch (error: any) {
     console.error('Failed to update product:', error);
-    throw new Error(extractErrorMessage(error, 'Failed to update product. Please verify inputs and try again.'));
+    const userMsg = extractErrorMessage(error, 'Failed to update product. Please try again.');
+    throw new Error(userMsg);
   }
 
   revalidatePath('/admin/products');
   revalidatePath('/products');
   revalidatePath(`/products/${category_slug}`);
   revalidatePath(`/products/${category_slug}/${slug}`);
-  return { success: true };
-}
-
-export async function deleteProduct(id: string) {
-  const db = getDb();
-  if (!db) {
-    throw new Error('Database connection unavailable.');
-  }
-
-  try {
-    await db.prepare('DELETE FROM products WHERE id = ?').bind((id || '').trim()).run();
-  } catch (error: any) {
-    console.error('Failed to delete product:', error);
-    throw new Error(extractErrorMessage(error, 'Failed to delete product.'));
-  }
-
-  revalidatePath('/admin/products');
-  revalidatePath('/products');
-  return { success: true };
 }
 
 export async function createProduct(formData: FormData) {
@@ -259,6 +229,7 @@ export async function createProduct(formData: FormData) {
   if (!db) {
     throw new Error('Database connection unavailable.');
   }
+
   const id = crypto.randomUUID();
 
   const name = (formData.get('name') as string)?.trim();
@@ -284,7 +255,6 @@ export async function createProduct(formData: FormData) {
   const is_enquiry_only = (rawEnquiry === 'true' || rawEnquiry === '1') ? 1 : 0;
 
   const category = PRODUCT_CATEGORIES.find(c => c.slug === category_slug)?.name || 'Default';
-
   const slug = await generateUniqueSlug(db, rawSlug, name);
 
   let colorsArray: string[] = ['Black', 'Navy', 'Heather Gray', 'White'];
@@ -294,9 +264,7 @@ export async function createProduct(formData: FormData) {
       const parsed = typeof colorsRaw === 'string' ? JSON.parse(colorsRaw) : colorsRaw;
       if (Array.isArray(parsed)) colorsArray = parsed;
     }
-  } catch {
-    // fallback to defaults
-  }
+  } catch {}
 
   let sizesArray: string[] = ['S', 'M', 'L', 'XL', 'XXL'];
   try {
@@ -305,9 +273,7 @@ export async function createProduct(formData: FormData) {
       const parsed = typeof sizesRaw === 'string' ? JSON.parse(sizesRaw) : sizesRaw;
       if (Array.isArray(parsed)) sizesArray = parsed;
     }
-  } catch {
-    // fallback to defaults
-  }
+  } catch {}
 
   let featuresArray: string[] = [];
   try {
@@ -316,9 +282,7 @@ export async function createProduct(formData: FormData) {
       const parsed = typeof featuresRaw === 'string' ? JSON.parse(featuresRaw) : featuresRaw;
       if (Array.isArray(parsed)) featuresArray = parsed;
     }
-  } catch {
-    // fallback
-  }
+  } catch {}
 
   let customSpecs: Record<string, string> = {};
   try {
@@ -329,22 +293,21 @@ export async function createProduct(formData: FormData) {
         customSpecs = parsed;
       }
     }
-  } catch {
-    customSpecs = {};
-  }
+  } catch {}
 
   const specifications: Record<string, string> = {
     ...customSpecs,
     _colors: JSON.stringify(colorsArray),
-    _sizes: JSON.stringify(sizesArray)
+    _sizes: JSON.stringify(sizesArray),
+    _features: JSON.stringify(featuresArray)
   };
 
   const images = await processImages(formData);
 
   try {
     await db.prepare(`
-      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, colors, sizes, features, is_enquiry_only, is_active, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO products (id, name, slug, category, category_slug, price_inr, moq, images, description, specifications, is_enquiry_only, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).bind(
       id,
       name ?? '',
@@ -356,18 +319,32 @@ export async function createProduct(formData: FormData) {
       JSON.stringify(images || []),
       description ?? '',
       JSON.stringify(specifications || {}),
-      JSON.stringify(colorsArray || []),
-      JSON.stringify(sizesArray || []),
-      JSON.stringify(featuresArray || []),
       is_enquiry_only ?? 0,
       is_active ?? 0
     ).run();
   } catch (error: any) {
     console.error('Failed to create product:', error);
-    throw new Error(extractErrorMessage(error, 'Failed to create product. Please verify inputs and try again.'));
+    const userMsg = extractErrorMessage(error, 'Failed to create product. Please try again.');
+    throw new Error(userMsg);
   }
 
   revalidatePath('/admin/products');
   revalidatePath('/products');
-  return { success: true };
+}
+
+export async function deleteProduct(id: string) {
+  const db = getDb();
+  if (!db) {
+    throw new Error('Database connection unavailable.');
+  }
+
+  try {
+    await db.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
+    revalidatePath('/admin/products');
+    revalidatePath('/products');
+  } catch (error: any) {
+    console.error('Failed to delete product:', error);
+    const userMsg = extractErrorMessage(error, 'Failed to delete product.');
+    throw new Error(userMsg);
+  }
 }
