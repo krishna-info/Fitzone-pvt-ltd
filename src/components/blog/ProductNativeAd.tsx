@@ -16,14 +16,14 @@ export const ProductNativeAd: React.FC<ProductNativeAdProps> = ({ product, title
       <div className="bg-white rounded-[1.9rem] p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
         {/* Background Accent */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-brand-primary/10 transition-colors" />
-        
+
         {/* Image Section */}
         <div className="w-full md:w-48 h-48 relative rounded-2xl overflow-hidden flex-shrink-0 shadow-lg">
           {product.images && product.images[0] && (
-            <Image 
-              src={product.images[0]} 
-              alt={product.name} 
-              fill 
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
               className="object-cover group-hover:scale-110 transition-transform duration-500"
             />
           )}
@@ -40,14 +40,14 @@ export const ProductNativeAd: React.FC<ProductNativeAdProps> = ({ product, title
               {product.name}
             </h3>
           </div>
-          
+
           <p className="text-brand-muted text-sm line-clamp-2 leading-relaxed">
             {product.description}
           </p>
 
           <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
-            <Link 
-              href={`/products/${product.slug}`}
+            <Link
+              href={`/products/${product.category.toLowerCase().replace(/\s+/g, '-')}/${product.slug}`}
               className="px-6 py-3 bg-brand-dark text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-brand-primary transition-colors flex items-center gap-2"
             >
               Shop Now <ArrowRight className="w-4 h-4" />
